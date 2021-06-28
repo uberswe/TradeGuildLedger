@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"fmt"
@@ -10,10 +10,16 @@ import (
 	json "github.com/layeh/gopher-json"
 	lua "github.com/yuin/gopher-lua"
 	"log"
+	"time"
 )
 
-func main() {
-	parseLua()
+var (
+	status *widget.Label
+)
+
+func Run() {
+	go parseLua()
+	launchUI()
 }
 
 func parseLua() {
@@ -46,6 +52,7 @@ func parseLua() {
 						fmt.Println(err)
 						return
 					}
+					status.SetText(fmt.Sprintf("Last uploaded at %s", time.Now().Format("2006-01-02 15:04:05")))
 					fmt.Println("done parsing")
 					//fmt.Println(string(j))
 				}
@@ -67,21 +74,11 @@ func parseLua() {
 
 func launchUI() {
 	a := app.NewWithID("com.tradeguildledger.app")
-	w := a.NewWindow("Hello")
-	newItem := fyne.NewMenuItem("New", nil)
-	file := fyne.NewMenu("File", newItem)
-	mainMenu := fyne.NewMainMenu(
-		file,
-	)
-	w.SetMainMenu(mainMenu)
-	hello := widget.NewLabel("Hello Fyne!")
+	w := a.NewWindow("Trade Guild Ledger Client")
+	status = widget.NewLabel("Waiting for changes.")
 	w.SetContent(container.NewVBox(
-		hello,
-		widget.NewButton("Hi!", func() {
-			hello.SetText("Welcome :)")
-		}),
+		status,
 	))
-
 	w.Resize(fyne.NewSize(640, 460))
 
 	w.ShowAndRun()
