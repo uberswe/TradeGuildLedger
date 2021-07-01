@@ -28,7 +28,7 @@ func Run() {
 }
 
 func parseLua() {
-	url := "http://localhost:3000/api/v1/receive"
+	url := "http://localhost:3100/api/v1/receive"
 	sv := "savedvars/TradeGuildLedger.lua"
 	if runtime.GOOS == "windows" {
 		home, err := os.UserHomeDir()

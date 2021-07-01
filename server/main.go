@@ -31,8 +31,8 @@ func Run() {
 	router.GET("/", index)
 	router.POST("/api/v1/receive", receive)
 
-	log.Println("Listening on :3000")
-	log.Fatal(http.ListenAndServe(":3000", router))
+	log.Println("Listening on :3100")
+	log.Fatal(http.ListenAndServe(":3100", router))
 }
 
 func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
