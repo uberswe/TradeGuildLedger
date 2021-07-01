@@ -5,9 +5,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path/filepath"
 )
 
 var (
@@ -24,6 +26,8 @@ func Run() {
 
 	// HTTP
 	router := httprouter.New()
+	router.ServeFiles("/assets/*filepath", http.Dir("./assets"))
+	router.ServeFiles("/vendor/bulma/css/*filepath", http.Dir("./node_modules/bulma/css"))
 	router.GET("/", index)
 	router.POST("/api/v1/receive", receive)
 
@@ -32,7 +36,10 @@ func Run() {
 }
 
 func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	lp := filepath.Join("web", "index.html")
 
+	tmpl, _ := template.ParseFiles(lp)
+	_ = tmpl.ExecuteTemplate(w, "layout", nil)
 }
 
 func receive(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
