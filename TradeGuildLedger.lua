@@ -10,6 +10,17 @@ function TradeGuildLedger:Initialize()
     if (TradeGuildLedger.savedVariables.npcs == nil) then
         TradeGuildLedger.savedVariables.npcs = {}
     end
+    if (TradeGuildLedger.savedVariables.guilds == nil) then
+        TradeGuildLedger.savedVariables.guilds = {}
+    end
+    -- Migrations
+    if (TradeGuildLedger.savedVariables.tglv ~= "0.0.1") then
+        -- Initial version, clear all previous data
+        TradeGuildLedger.savedVariables.items = {}
+        TradeGuildLedger.savedVariables.npcs = {}
+        TradeGuildLedger.savedVariables.guilds = {}
+        TradeGuildLedger.savedVariables.tglv = "0.0.1"
+    end
 end
 
 function TradeGuildLedger.OnAddOnLoaded(event, addonName)
@@ -50,9 +61,6 @@ function TradeGuildLedger.ProcessGuildListings()
     local guildID, _, _ = GetCurrentTradingHouseGuildDetails()
     local guildName = GetGuildName(guildID)
     local numListing = GetNumTradingHouseListings()
-    if (TradeGuildLedger.savedVariables.guilds == nil) then
-        TradeGuildLedger.savedVariables.guilds = {}
-    end
     if (TradeGuildLedger.savedVariables.guilds[guildName] == nil) then
         TradeGuildLedger.savedVariables.guilds[guildName] = {}
         TradeGuildLedger.savedVariables.guilds[guildName].items = {}
