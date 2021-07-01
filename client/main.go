@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -9,7 +10,11 @@ import (
 	"github.com/fsnotify/fsnotify"
 	json "github.com/layeh/gopher-json"
 	lua "github.com/yuin/gopher-lua"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"os"
+	"runtime"
 	"time"
 )
 
@@ -23,6 +28,17 @@ func Run() {
 }
 
 func parseLua() {
+	url := "http://localhost:3000/api/v1/receive"
+	sv := "savedvars/TradeGuildLedger.lua"
+	if runtime.GOOS == "windows" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		sv = fmt.Sprintf("%s\\Documents\\Elder Scrolls Online\\live\\SavedVariables\\TradeGuildLedger.lua", home)
+		url = "https://tradeguildledger.com/api/v1/receive"
+	}
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -42,19 +58,37 @@ func parseLua() {
 					log.Println("modified file:", event.Name)
 					L := lua.NewState()
 					defer L.Close()
-					if err := L.DoFile("savedvars/TradeGuildLedger.lua"); err != nil {
+
+					if err := L.DoFile(sv); err != nil {
 						fmt.Println(err)
 						return
 					}
 					lv := L.GetGlobal("TradeGuildLedgerVars")
-					_, err := json.Encode(lv)
+					j, err := json.Encode(lv)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
-					status.SetText(fmt.Sprintf("Last uploaded at %s", time.Now().Format("2006-01-02 15:04:05")))
+					status.SetText("Uploading data...")
 					fmt.Println("done parsing")
-					//fmt.Println(string(j))
+
+					fmt.Println("URL:>", url)
+
+					req, err := http.NewRequest("POST", url, bytes.NewBuffer(j))
+					req.Header.Set("Content-Type", "application/json")
+
+					client := &http.Client{}
+					resp, err := client.Do(req)
+					if err != nil {
+						panic(err)
+					}
+					defer resp.Body.Close()
+
+					fmt.Println("response Status:", resp.Status)
+					fmt.Println("response Headers:", resp.Header)
+					body, _ := ioutil.ReadAll(resp.Body)
+					fmt.Println("response Body:", string(body))
+					status.SetText(fmt.Sprintf("Last uploaded at %s", time.Now().Format("2006-01-02 15:04:05")))
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -65,7 +99,7 @@ func parseLua() {
 		}
 	}()
 
-	err = watcher.Add("savedvars/TradeGuildLedger.lua")
+	err = watcher.Add(sv)
 	if err != nil {
 		log.Fatal(err)
 	}
