@@ -21,6 +21,7 @@ function TradeGuildLedger:Initialize()
         TradeGuildLedger.savedVariables.guilds = {}
         TradeGuildLedger.savedVariables.tglv = "0.0.1"
     end
+    TradeGuildLedger.savedVariables.region = TradeGuildLedger.GetRegion()
     local timestamp = GetTimeStamp()
     for k, v in pairs(TradeGuildLedger.savedVariables.npcs) do
         for k2, v2 in pairs(v) do
@@ -67,9 +68,9 @@ function TradeGuildLedger.ProcessSearchResults()
         local link = GetTradingHouseSearchResultItemLink(i)
         -- textureName icon, string itemName, number quality, number stackCount, string sellerName, number timeRemaining, number purchasePrice, number CurrencyType currencyType, id64 itemUniqueId, number purchasePricePerUnit
         local textureName, itemName, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, uid, purchasePricePerUnit = GetTradingHouseSearchResultItemInfo(i)
-        table.insert(TradeGuildLedger.savedVariables.npcs[npc].items, {ts=timestamp, l=link, quality=quality, sc=stackCount, sn=sellerName, tr=timeRemaining, pp=purchasePrice, ct=currencyType, uid=uid, pppu=purchasePricePerUnit})
+        table.insert(TradeGuildLedger.savedVariables.npcs[npc].items, { ts = timestamp, l = link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = purchasePrice, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
         if (TradeGuildLedger.savedVariables.items[link] == nil) then
-            TradeGuildLedger.savedVariables.items[link] = {ts=timestamp, tn=textureName, itn=itemName, quality=quality}
+            TradeGuildLedger.savedVariables.items[link] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
         end
     end
 end
@@ -86,9 +87,9 @@ function TradeGuildLedger.ProcessGuildListings()
     for i = 1, numListing do
         local link = GetTradingHouseListingItemLink(i)
         local textureName, itemName, quality, stackCount, sellerName, timeRemaining, price, currencyType, uid, purchasePricePerUnit = GetTradingHouseListingItemInfo(i)
-        table.insert(TradeGuildLedger.savedVariables.guilds[guildName].items, {ts=timestamp, l=link, quality=quality, sc=stackCount, sn=sellerName, tr=timeRemaining, pp=price, ct=currencyType, uid=uid, pppu=purchasePricePerUnit})
+        table.insert(TradeGuildLedger.savedVariables.guilds[guildName].items, { ts = timestamp, l = link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = price, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
         if (TradeGuildLedger.savedVariables.items[link] == nil) then
-            TradeGuildLedger.savedVariables.items[link] = {ts=timestamp, tn=textureName, itn=itemName, quality=quality}
+            TradeGuildLedger.savedVariables.items[link] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
         end
     end
 end
@@ -107,6 +108,19 @@ end
 
 function TradeGuildLedger.OnTradingHouseConfirmItemPurchase(eventCode, pendingPurchaseIndex)
 
+end
+
+function TradeGuildLedger.GetRegion()
+    local lastPlatform = GetCVar("LastPlatform")
+    local lastRealm = GetCVar("LastRealm")
+    if (lastPlatform == "Live") then
+        return "NA"
+    elseif (lastPlatform == "Live-EU") then
+        return "EU"
+    elseif (lastRealm:find("^NA") ~= nil) then
+        return "NA"
+    end
+    return "EU"
 end
 
 -- Register event handler functions

@@ -2,10 +2,11 @@ package client
 
 import (
 	"bytes"
+	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"github.com/fsnotify/fsnotify"
 	json "github.com/layeh/gopher-json"
@@ -19,7 +20,9 @@ import (
 )
 
 var (
-	status *widget.Label
+	logData  []string
+	list     *widget.List
+	checksum = ""
 )
 
 func Run() {
@@ -66,7 +69,16 @@ func parseLua() {
 						return
 					}
 
-					if err := L.DoString(s); err != nil {
+					// Make a checksum of the ledger content so we only update changes
+					hasher := sha1.New()
+					hasher.Write(s)
+					sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+
+					if sha == checksum {
+						return
+					}
+					checksum = sha
+					if err := L.DoString(string(s)); err != nil {
 						fmt.Println(err)
 						return
 					}
@@ -76,7 +88,9 @@ func parseLua() {
 						fmt.Println(err)
 						return
 					}
-					status.SetText("Uploading data...")
+					logData = append(logData, "Uploading data...")
+					list.Refresh()
+
 					fmt.Println("done parsing")
 
 					fmt.Println("URL:>", url)
@@ -95,7 +109,8 @@ func parseLua() {
 					fmt.Println("response Headers:", resp.Header)
 					body, _ := ioutil.ReadAll(resp.Body)
 					fmt.Println("response Body:", string(body))
-					status.SetText(fmt.Sprintf("Last uploaded at %s", time.Now().Format("2006-01-02 15:04:05")))
+					logData = append(logData, fmt.Sprintf("Last uploaded at %s", time.Now().Format("2006-01-02 15:04:05")))
+					list.Refresh()
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -113,7 +128,7 @@ func parseLua() {
 	<-done
 }
 
-func readFile(file string, attempt int) (string, error) {
+func readFile(file string, attempt int) ([]byte, error) {
 	log.Println("Attempting to read ", file)
 	f, err := os.Open(file)
 	if err != nil {
@@ -121,7 +136,7 @@ func readFile(file string, attempt int) (string, error) {
 			time.Sleep(1 * time.Second)
 			return readFile(file, attempt+1)
 		}
-		return "", err
+		return nil, err
 	}
 
 	defer func() {
@@ -132,18 +147,27 @@ func readFile(file string, attempt int) (string, error) {
 
 	b, err := ioutil.ReadAll(f)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(b), nil
+	return b, nil
 }
 
 func launchUI() {
+	logData = append(logData, "Application started, waiting to send data")
 	a := app.NewWithID("com.tradeguildledger.app")
 	w := a.NewWindow("Trade Guild Ledger Client")
-	status = widget.NewLabel("Waiting for changes.")
-	w.SetContent(container.NewVBox(
-		status,
-	))
+	list = widget.NewList(
+		func() int {
+			return len(logData)
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("template")
+		},
+		func(i widget.ListItemID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(logData[i])
+		})
+
+	w.SetContent(list)
 	w.Resize(fyne.NewSize(640, 460))
 
 	w.ShowAndRun()
