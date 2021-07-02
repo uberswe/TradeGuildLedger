@@ -21,6 +21,23 @@ function TradeGuildLedger:Initialize()
         TradeGuildLedger.savedVariables.guilds = {}
         TradeGuildLedger.savedVariables.tglv = "0.0.1"
     end
+    local timestamp = GetTimeStamp()
+    for k, v in pairs(TradeGuildLedger.savedVariables.npcs) do
+        for k2, v2 in pairs(v) do
+            -- remove entries older than 24 hours
+            if (v2.ts == nil or (v2.ts + 86400) < timestamp) then
+                TradeGuildLedger.savedVariables.npcs[k][k2] = nil
+            end
+        end
+    end
+    for k, v in pairs(TradeGuildLedger.savedVariables.guilds) do
+        for k2, v2 in pairs(v) do
+            -- remove entries older than 24 hours
+            if (v2.ts == nil or (v2.ts + 86400) < timestamp) then
+                TradeGuildLedger.savedVariables.guilds[k][k2] = nil
+            end
+        end
+    end
 end
 
 function TradeGuildLedger.OnAddOnLoaded(event, addonName)

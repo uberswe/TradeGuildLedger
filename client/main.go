@@ -37,7 +37,7 @@ func parseLua() {
 			return
 		}
 		sv = fmt.Sprintf("%s\\Documents\\Elder Scrolls Online\\live\\SavedVariables\\TradeGuildLedger.lua", home)
-		url = "https://tradeguildledger.com/api/v1/receive"
+		url = "https://www.tradeguildledger.com/api/v1/receive"
 	}
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -59,7 +59,14 @@ func parseLua() {
 					L := lua.NewState()
 					defer L.Close()
 
-					if err := L.DoFile(sv); err != nil {
+					s, err := readFile(sv, 0)
+
+					if err != nil {
+						log.Println(err)
+						return
+					}
+
+					if err := L.DoString(s); err != nil {
 						fmt.Println(err)
 						return
 					}
@@ -104,6 +111,30 @@ func parseLua() {
 		log.Fatal(err)
 	}
 	<-done
+}
+
+func readFile(file string, attempt int) (string, error) {
+	log.Println("Attempting to read ", file)
+	f, err := os.Open(file)
+	if err != nil {
+		if attempt < 10 {
+			time.Sleep(1 * time.Second)
+			return readFile(file, attempt+1)
+		}
+		return "", err
+	}
+
+	defer func() {
+		if err = f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 func launchUI() {
