@@ -26,16 +26,21 @@ function TradeGuildLedger:Initialize()
     for k, v in pairs(TradeGuildLedger.savedVariables.npcs) do
         for k2, v2 in pairs(v) do
             -- remove entries older than 24 hours
-            if (v2.ts == nil or (v2.ts + 86400) < timestamp) then
-                TradeGuildLedger.savedVariables.npcs[k][k2] = nil
+            for k3, v3 in pairs(v2) do
+                -- remove entries older than 24 hours
+                if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
+                    TradeGuildLedger.savedVariables.npcs[k][k2][k3] = nil
+                end
             end
         end
     end
     for k, v in pairs(TradeGuildLedger.savedVariables.guilds) do
         for k2, v2 in pairs(v) do
-            -- remove entries older than 24 hours
-            if (v2.ts == nil or (v2.ts + 86400) < timestamp) then
-                TradeGuildLedger.savedVariables.guilds[k][k2] = nil
+            for k3, v3 in pairs(v2) do
+                -- remove entries older than 24 hours
+                if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
+                    TradeGuildLedger.savedVariables.guilds[k][k2][k3] = nil
+                end
             end
         end
     end
@@ -61,6 +66,8 @@ function TradeGuildLedger.ProcessSearchResults()
     local npc = GetRawUnitName("interact")
     if (TradeGuildLedger.savedVariables.npcs[npc] == nil) then
         TradeGuildLedger.savedVariables.npcs[npc] = {}
+    end
+    if (TradeGuildLedger.savedVariables.npcs[npc].items == nil) then
         TradeGuildLedger.savedVariables.npcs[npc].items = {}
     end
     local timestamp = GetTimeStamp()
@@ -81,6 +88,8 @@ function TradeGuildLedger.ProcessGuildListings()
     local numListing = GetNumTradingHouseListings()
     if (TradeGuildLedger.savedVariables.guilds[guildName] == nil) then
         TradeGuildLedger.savedVariables.guilds[guildName] = {}
+    end
+    if (TradeGuildLedger.savedVariables.guilds[guildName].items == nil) then
         TradeGuildLedger.savedVariables.guilds[guildName].items = {}
     end
     local timestamp = GetTimeStamp()
