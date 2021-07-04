@@ -2,3 +2,5 @@
 *.db
 *.exe
 node_modules
+!savedvars/.gitkeep
+savedvars/*
