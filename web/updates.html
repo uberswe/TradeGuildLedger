@@ -1,0 +1,35 @@
+{{define "content"}}
+    <section>
+        {{ if gt .Offset 0 }}
+            <a href="/ledger/events/{{ .PrevOffset }}" class="button">Previous</a>
+        {{ end }}
+        {{ if gt (len .Updates) 0 }}
+            <a href="/ledger/events/{{ .NextOffset }}" class="button">Next</a>
+        {{ end }}
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Log</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Log</th>
+            </tr>
+            </tfoot>
+            <tbody>
+            {{range $index, $update := .Updates }}
+                <tr>
+                    <td>{{ $update.Log }}</td>
+                </tr>
+            {{end}}
+            </tbody>
+        </table>
+        {{ if gt .Offset 0 }}
+            <a href="/ledger/events/{{ .PrevOffset }}" class="button">Previous</a>
+        {{ end }}
+        {{ if gt (len .Updates) 0 }}
+            <a href="/ledger/events/{{ .NextOffset }}" class="button">Next</a>
+        {{ end }}
+    </section>
+{{ end }}

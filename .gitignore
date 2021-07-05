@@ -1,6 +1,8 @@
 .idea
 *.db
 *.exe
+*.zip
+TradeGuildLedger/
 node_modules
 !savedvars/.gitkeep
 savedvars/*

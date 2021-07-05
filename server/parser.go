@@ -16,7 +16,7 @@ func parseIncomingPayload(p []byte, r *http.Request) {
 	requestId := randomString(20)
 	log.Printf("parsing %s\n", requestId)
 	u := UpdateModel{
-		Log: fmt.Sprintf("Incoming data at %s", time.Now().String()),
+		Log: fmt.Sprintf("Incoming data at %s", time.Now().Format(time.RFC1123)),
 		IP:  r.RemoteAddr,
 	}
 	// TODO improve validation
@@ -169,7 +169,6 @@ func parseListingsPayload(j json.RawMessage, vm VersionModel, guild string, npc 
 					PricePerUnit:   v2.Pppu,
 					Quality:        v2.Quality,
 					StackCount:     v2.Sc,
-					SellerName:     v2.Sn,
 					TimeRemaining:  v2.Tr,
 					Timestamp:      v2.Ts,
 					ListingUID:     v2.UID,

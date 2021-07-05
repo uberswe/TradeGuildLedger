@@ -25,11 +25,10 @@ function TradeGuildLedger:Initialize()
     local timestamp = GetTimeStamp()
     for k, v in pairs(TradeGuildLedger.savedVariables.npcs) do
         for k2, v2 in pairs(v) do
-            -- remove entries older than 24 hours
             for k3, v3 in pairs(v2) do
                 -- remove entries older than 24 hours
                 if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
-                    TradeGuildLedger.savedVariables.npcs[k][k2][k3] = nil
+                    table.remove(TradeGuildLedger.savedVariables.npcs[k][k2], k3)
                 end
             end
         end
@@ -39,7 +38,7 @@ function TradeGuildLedger:Initialize()
             for k3, v3 in pairs(v2) do
                 -- remove entries older than 24 hours
                 if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
-                    TradeGuildLedger.savedVariables.guilds[k][k2][k3] = nil
+                    table.remove(TradeGuildLedger.savedVariables.guilds[k][k2], k3)
                 end
             end
         end
@@ -62,7 +61,7 @@ function TradeGuildLedger.OnTradingHouseResponseReceived(eventCode, responseType
 end
 
 function TradeGuildLedger.ProcessSearchResults()
-    local numItemsOnPage, currentPage, _ = GetTradingHouseSearchResultsInfo()
+    local numItemsOnPage, _, _ = GetTradingHouseSearchResultsInfo()
     local npc = GetRawUnitName("interact")
     if (TradeGuildLedger.savedVariables.npcs[npc] == nil) then
         TradeGuildLedger.savedVariables.npcs[npc] = {}
@@ -103,20 +102,8 @@ function TradeGuildLedger.ProcessGuildListings()
     end
 end
 
-function TradeGuildLedger.OnTradingHouseOpened()
-
-end
-
-function TradeGuildLedger.OnTradingHouseClosed()
-
-end
-
-function TradeGuildLedger.OnOldStoreHistoryRequested(eventCode, guildId, category)
-
-end
-
 function TradeGuildLedger.OnTradingHouseConfirmItemPurchase(eventCode, pendingPurchaseIndex)
-
+    -- TODO implement purchase tracking
 end
 
 function TradeGuildLedger.GetRegion()
@@ -134,8 +121,5 @@ end
 
 -- Register event handler functions
 EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_ADD_ON_LOADED, TradeGuildLedger.OnAddOnLoaded)
-EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_CLOSE_TRADING_HOUSE, TradeGuildLedger.OnTradingHouseClosed)
 EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_RESPONSE_RECEIVED, TradeGuildLedger.OnTradingHouseResponseReceived)
-EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_OPEN_TRADING_HOUSE, TradeGuildLedger.OnTradingHouseOpened)
-EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_GUILD_HISTORY_RESPONSE_RECEIVED, TradeGuildLedger.OnOldStoreHistoryRequested)
 EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_CONFIRM_ITEM_PURCHASE, TradeGuildLedger.OnTradingHouseConfirmItemPurchase)

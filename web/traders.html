@@ -1,0 +1,37 @@
+{{define "content"}}
+    <section>
+        {{ if gt .Offset 0 }}
+            <a href="/ledger/traders/{{ .PrevOffset }}" class="button">Previous</a>
+        {{ end }}
+        {{ if gt (len .Npcs) 0 }}
+            <a href="/ledger/traders/{{ .NextOffset }}" class="button">Next</a>
+        {{ end }}
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Trader Name</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Trader Name</th>
+            </tr>
+            </tfoot>
+            <tbody>
+
+            {{range $index, $trader := .Npcs }}
+                <tr>
+                    <td>{{ $trader.Name }}</td>
+                </tr>
+
+            {{end}}
+            </tbody>
+        </table>
+        {{ if gt .Offset 0 }}
+            <a href="/ledger/traders/{{ .PrevOffset }}" class="button">Previous</a>
+        {{ end }}
+        {{ if gt (len .Npcs) 0 }}
+            <a href="/ledger/traders/{{ .NextOffset }}" class="button">Next</a>
+        {{ end }}
+    </section>
+{{ end }}

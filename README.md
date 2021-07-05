@@ -15,6 +15,8 @@ To build the server simply run
 go build cmd/server/main.go
 ```
 
+The html templates use [Bulma](https://bulma.io/), the easiest way to add this is with `npm install`
+
 ## Client
 
 Build client for windows on mac
@@ -24,3 +26,7 @@ CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -ldfl
 ```
 
 Build for linux on mac
+
+## Addon
+
+The addon is written in Lua and currently kept very basic. It reads listings when you view them in game and saves that data when the ui is reloaded or whenever the game triggers a write of saved variables. 

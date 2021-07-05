@@ -23,16 +23,11 @@ var (
 	logData  []string
 	list     *widget.List
 	checksum = ""
+	url      = "http://localhost:3100/api/v1/receive"
+	sv       = "savedvars/TradeGuildLedger.lua"
 )
 
 func Run() {
-	go parseLua()
-	launchUI()
-}
-
-func parseLua() {
-	url := "http://localhost:3100/api/v1/receive"
-	sv := "savedvars/TradeGuildLedger.lua"
 	if runtime.GOOS == "windows" {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -42,6 +37,12 @@ func parseLua() {
 		sv = fmt.Sprintf("%s\\Documents\\Elder Scrolls Online\\live\\SavedVariables\\TradeGuildLedger.lua", home)
 		url = "https://www.tradeguildledger.com/api/v1/receive"
 	}
+
+	go parseLua()
+	launchUI()
+}
+
+func parseLua() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -59,8 +60,6 @@ func parseLua() {
 				log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
-					L := lua.NewState()
-					defer L.Close()
 
 					s, err := readFile(sv, 0)
 
@@ -78,11 +77,15 @@ func parseLua() {
 						return
 					}
 					checksum = sha
-					if err := L.DoString(string(s)); err != nil {
+
+					l := lua.NewState()
+					defer l.Close()
+					if err := l.DoString(string(s)); err != nil {
 						fmt.Println(err)
 						return
 					}
-					lv := L.GetGlobal("TradeGuildLedgerVars")
+					lv := l.GetGlobal("TradeGuildLedgerVars")
+					log.Println(lv.String())
 					j, err := json.Encode(lv)
 					if err != nil {
 						fmt.Println(err)
@@ -90,6 +93,7 @@ func parseLua() {
 					}
 					logData = append(logData, "Uploading data...")
 					list.Refresh()
+					list.Select(len(logData) - 1)
 
 					fmt.Println("done parsing")
 
@@ -111,6 +115,7 @@ func parseLua() {
 					fmt.Println("response Body:", string(body))
 					logData = append(logData, fmt.Sprintf("Last uploaded at %s", time.Now().Format("2006-01-02 15:04:05")))
 					list.Refresh()
+					list.Select(len(logData) - 1)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -121,10 +126,24 @@ func parseLua() {
 		}
 	}()
 
-	err = watcher.Add(sv)
-	if err != nil {
-		log.Fatal(err)
+	failCount := 0
+
+	for {
+		err = watcher.Add(sv)
+		if err != nil {
+			log.Println(err)
+			failCount++
+		} else {
+			break
+		}
+		if failCount > 2 {
+			logData = append(logData, fmt.Sprintf("Unable to read file, please make sure the Trade Guild Ledger addon is installed: %s", sv))
+			list.Refresh()
+			list.Select(len(logData) - 1)
+		}
+		time.Sleep(5 * time.Second)
 	}
+
 	<-done
 }
 
@@ -154,6 +173,8 @@ func readFile(file string, attempt int) ([]byte, error) {
 
 func launchUI() {
 	logData = append(logData, "Application started, waiting to send data")
+	logData = append(logData, fmt.Sprintf("Watching file: %s", sv))
+	logData = append(logData, fmt.Sprintf("API endpoint: %s", url))
 	a := app.NewWithID("com.tradeguildledger.app")
 	w := a.NewWindow("Trade Guild Ledger Client")
 	list = widget.NewList(

@@ -1,0 +1,58 @@
+{{define "content"}}
+    <section>
+        {{ if gt .Offset 0 }}
+            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+        {{ end }}
+        {{ if gt (len .Listings) 0 }}
+            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+        {{ end }}
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Quality</th>
+                <th>Stack Count</th>
+                <th>Trader</th>
+                <th>Seller</th>
+                <th>Time Remaining</th>
+                <th>Seen</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+                <th>Item Name</th>
+                <th>Price</th>
+                <th>Quality</th>
+                <th>Stack Count</th>
+                <th>Trader</th>
+                <th>Seller</th>
+                <th>Time Remaining</th>
+                <th>Seen</th>
+            </tr>
+            </tfoot>
+            <tbody>
+
+            {{range $index, $listing := .Listings }}
+                <tr>
+                    <td>{{ $listing.ItemModel.Name }}</td>
+                    <td>{{ $listing.Price }}</td>
+                    <td>{{ $listing.Quality }}</td>
+                    <td>{{ $listing.StackCount }}</td>
+                    <td>{{ $listing.NpcModel.Name }}</td>
+                    <td>{{ $listing.SellerModel.At }}</td>
+                    <td>{{ $listing.TimeRemaining }}</td>
+                    <td>{{ $listing.Timestamp }}</td>
+                </tr>
+
+            {{end}}
+            </tbody>
+        </table>
+        {{ if gt .Offset 0 }}
+            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+        {{ end }}
+        {{ if gt (len .Listings) 0 }}
+            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+        {{ end }}
+    </section>
+{{ end }}

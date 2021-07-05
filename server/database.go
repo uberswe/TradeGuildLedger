@@ -57,18 +57,21 @@ type ListingModel struct {
 	gorm.Model
 	CurrencyType   int
 	ItemModelID    uint
+	ItemModel      ItemModel
 	Price          int
 	PricePerUnit   float64
 	Quality        int
 	StackCount     int
-	SellerName     string
 	TimeRemaining  int
 	Timestamp      int
 	ListingUID     float64
 	VersionModelID uint
 	SellerModelID  uint
+	SellerModel    SellerModel
 	GuildModelID   uint
+	GuildModel     GuildModel
 	NpcModelID     uint
+	NpcModel       NpcModel
 }
 
 type UpdateModel struct {
