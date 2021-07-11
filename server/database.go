@@ -1,12 +1,13 @@
 package server
 
 import (
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"log"
 	"os"
 	"time"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func initDB() {
@@ -36,7 +37,8 @@ func initDB() {
 		GuildModel{},
 		NpcModel{},
 		SellerModel{},
-		VersionModel{})
+		VersionModel{},
+		RegionModel{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,8 +50,9 @@ type ItemModel struct {
 	Name           string
 	Quality        int
 	Texture        string
-	Link           string
 	VersionModelID uint
+	UID            int  // item id in the game
+	Active         bool // New items from untrusted sources should not be shown automatically
 	ListingModels  []ListingModel
 }
 
@@ -72,6 +75,9 @@ type ListingModel struct {
 	GuildModel     GuildModel
 	NpcModelID     uint
 	NpcModel       NpcModel
+	Link           string
+	RegionModelID  uint
+	RegionModel    RegionModel
 }
 
 type UpdateModel struct {
@@ -91,17 +97,27 @@ type NpcModel struct {
 	gorm.Model
 	Name          string
 	ListingModels []ListingModel
+	Active        bool
 }
 
 type SellerModel struct {
 	gorm.Model
 	At            string
+	RegionModel   RegionModel
+	RegionModelID uint
 	ListingModels []ListingModel
+}
+
+type RegionModel struct {
+	gorm.Model
+	Index        int
+	Name         string
+	SellerModels []SellerModel
 }
 
 type VersionModel struct {
 	gorm.Model
-	APIVersion    int
+	APIVersion    string
 	Region        string
 	AddonVersion  string
 	ItemModels    []ItemModel

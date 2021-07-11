@@ -4,6 +4,9 @@ TradeGuildLedger.name = "TradeGuildLedger"
 
 function TradeGuildLedger:Initialize()
     self.savedVariables = ZO_SavedVars:NewAccountWide("TradeGuildLedgerVars", 2, nil, {})
+    if (TradeGuildLedger.savedVariables.regions == nil) then
+        TradeGuildLedger.savedVariables.regions = {}
+    end
     if (TradeGuildLedger.savedVariables.items == nil) then
         TradeGuildLedger.savedVariables.items = {}
     end
@@ -25,10 +28,12 @@ function TradeGuildLedger:Initialize()
     local timestamp = GetTimeStamp()
     for k, v in pairs(TradeGuildLedger.savedVariables.npcs) do
         for k2, v2 in pairs(v) do
-            for k3, v3 in pairs(v2) do
-                -- remove entries older than 24 hours
-                if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
-                    table.remove(TradeGuildLedger.savedVariables.npcs[k][k2], k3)
+            if type(v2) == "table" then
+                for k3, v3 in pairs(v2) do
+                    -- remove entries older than 24 hours
+                    if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
+                        table.remove(TradeGuildLedger.savedVariables.npcs[k][k2], k3)
+                    end
                 end
             end
         end
@@ -61,6 +66,7 @@ function TradeGuildLedger.OnTradingHouseResponseReceived(eventCode, responseType
 end
 
 function TradeGuildLedger.ProcessSearchResults()
+    local region = GetCurrentMapZoneIndex()
     local numItemsOnPage, _, _ = GetTradingHouseSearchResultsInfo()
     local npc = GetRawUnitName("interact")
     if (TradeGuildLedger.savedVariables.npcs[npc] == nil) then
@@ -69,16 +75,26 @@ function TradeGuildLedger.ProcessSearchResults()
     if (TradeGuildLedger.savedVariables.npcs[npc].items == nil) then
         TradeGuildLedger.savedVariables.npcs[npc].items = {}
     end
+    if (TradeGuildLedger.savedVariables.regions[region] == nil) then
+        TradeGuildLedger.savedVariables.regions[region] = { name = GetZoneNameByIndex(region) }
+    end
     local timestamp = GetTimeStamp()
     for i = 1, numItemsOnPage do
         local link = GetTradingHouseSearchResultItemLink(i)
+        local id = TradeGuildLedger.GetIdFromLink(link)
         -- textureName icon, string itemName, number quality, number stackCount, string sellerName, number timeRemaining, number purchasePrice, number CurrencyType currencyType, id64 itemUniqueId, number purchasePricePerUnit
         local textureName, itemName, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, uid, purchasePricePerUnit = GetTradingHouseSearchResultItemInfo(i)
-        table.insert(TradeGuildLedger.savedVariables.npcs[npc].items, { ts = timestamp, l = link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = purchasePrice, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
-        if (TradeGuildLedger.savedVariables.items[link] == nil) then
-            TradeGuildLedger.savedVariables.items[link] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
+        table.insert(TradeGuildLedger.savedVariables.npcs[npc].items, { ts = timestamp, item = id, link=link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = purchasePrice, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
+        TradeGuildLedger.savedVariables.npcs[npc].region = region
+        if (TradeGuildLedger.savedVariables.items[id] == nil) then
+            TradeGuildLedger.savedVariables.items[id] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
         end
     end
+end
+
+function TradeGuildLedger.GetIdFromLink(link)
+    -- |H0/1:item:Id:SubType:InternalLevel:EnchantId:EnchantSubType:EnchantLevel:Writ1/TransmuteTrait:Writ2:Writ3:Writ4:Writ5:Writ6:0:0:0:Style:Crafted:Bound:Stolen:Charges:PotionEffect/WritReward|hName|h
+    return string.match(link, "item:([0-9]+):")
 end
 
 function TradeGuildLedger.ProcessGuildListings()
@@ -94,10 +110,11 @@ function TradeGuildLedger.ProcessGuildListings()
     local timestamp = GetTimeStamp()
     for i = 1, numListing do
         local link = GetTradingHouseListingItemLink(i)
+        local id = TradeGuildLedger.GetIdFromLink(link)
         local textureName, itemName, quality, stackCount, sellerName, timeRemaining, price, currencyType, uid, purchasePricePerUnit = GetTradingHouseListingItemInfo(i)
-        table.insert(TradeGuildLedger.savedVariables.guilds[guildName].items, { ts = timestamp, l = link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = price, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
-        if (TradeGuildLedger.savedVariables.items[link] == nil) then
-            TradeGuildLedger.savedVariables.items[link] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
+        table.insert(TradeGuildLedger.savedVariables.guilds[guildName].items, { ts = timestamp, item = id, link=link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = purchasePrice, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
+        if (TradeGuildLedger.savedVariables.items[id] == nil) then
+            TradeGuildLedger.savedVariables.items[id] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
         end
     end
 end
