@@ -1,8 +1,6 @@
 package client
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -18,11 +16,10 @@ import (
 )
 
 var (
-	logData  []string
-	list     *widget.List
-	checksum = ""
-	url      = "http://localhost:3100"
-	sv       = "savedvars/TradeGuildLedger.lua"
+	logData []string
+	list    *widget.List
+	url     = "http://localhost:3100"
+	sv      = "savedvars/TradeGuildLedger.lua"
 )
 
 func Run() {
@@ -68,19 +65,6 @@ func parseLua() {
 						log.Println(err)
 						break
 					}
-
-					// Make a checksum of the ledger content so we only update changes
-					hasher := sha1.New()
-					hasher.Write(s)
-					sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-
-					if sha == checksum {
-						logData = append(logData, "No new changes")
-						list.Refresh()
-						list.Select(len(logData) - 1)
-						break
-					}
-					checksum = sha
 
 					mapResult, err := parser.Parse(string(s), "TradeGuildLedgerVars")
 					if err != nil {
