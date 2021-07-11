@@ -222,7 +222,7 @@ func receiveListings(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 				if r := db.First(&im, "uid = ?", listing.ItemID); r.Error != nil {
 					log.Println(listing.ItemID, listing.Link)
 					log.Println(r.Error)
-					return
+					continue
 				}
 
 				// Check if region exists
