@@ -56,33 +56,31 @@ func receiveItems(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		}
 	}
 
-	go func() {
-		for _, item := range itemRequest.Items {
-			var i ItemModel
-			if r := db.First(&i, "uid = ?", item.ID); r.Error != nil && !errors.Is(r.Error, gorm.ErrRecordNotFound) {
+	for _, item := range itemRequest.Items {
+		var i ItemModel
+		if r := db.First(&i, "uid = ?", item.ID); r.Error != nil && !errors.Is(r.Error, gorm.ErrRecordNotFound) {
+			log.Println(r.Error)
+			return
+		}
+		if i.ID == 0 {
+			// If there is no item we create it
+			is := ItemModel{
+				Timestamp:      item.Timestamp,
+				Name:           formatName(item.ItemName),
+				Quality:        item.Quality,
+				Texture:        item.TextureName,
+				VersionModelID: vm.ID,
+				UID:            item.ID,
+				// Make an admin area where this cann be approved
+				Active: true,
+			}
+			if r := db.Create(&is); r.Error != nil {
 				log.Println(r.Error)
 				return
 			}
-			if i.ID == 0 {
-				// If there is no item we create it
-				is := ItemModel{
-					Timestamp:      item.Timestamp,
-					Name:           formatName(item.ItemName),
-					Quality:        item.Quality,
-					Texture:        item.TextureName,
-					VersionModelID: vm.ID,
-					UID:            item.ID,
-					// Make an admin area where this cann be approved
-					Active: true,
-				}
-				if r := db.Create(&is); r.Error != nil {
-					log.Println(r.Error)
-					return
-				}
-			}
 		}
-		log.Printf("done %s\n", requestId)
-	}()
+	}
+	log.Printf("done %s\n", requestId)
 
 	if r := db.Create(&u); r.Error != nil {
 		log.Println(r.Error)
@@ -222,9 +220,11 @@ func receiveListings(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 				}
 				// check if item exists
 				if r := db.First(&im, "uid = ?", listing.ItemID); r.Error != nil {
+					log.Println(listing.ItemID, listing.Link)
 					log.Println(r.Error)
 					return
 				}
+
 				// Check if region exists
 				if r := db.First(&rm, "`index` = ?", listing.RegionIndex); r.Error != nil && !errors.Is(r.Error, gorm.ErrRecordNotFound) {
 					log.Println(r.Error)
