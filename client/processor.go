@@ -58,6 +58,7 @@ func recursiveFind(m map[string]interface{}, p Processor) Processor {
 						}
 						item.ID = itemID
 						p.items = append(p.items, item)
+						log.Println(len(p.items))
 					}
 				}
 			}
@@ -175,7 +176,6 @@ func recursiveFind(m map[string]interface{}, p Processor) Processor {
 								}
 							}
 						}
-
 					}
 				}
 			}

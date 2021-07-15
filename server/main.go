@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -14,7 +15,10 @@ import (
 )
 
 var (
-	db *gorm.DB
+	db            *gorm.DB
+	addonVersion  = "0.0.1"
+	serverVersion = "0.0.1"
+	port          = ":3100"
 )
 
 type APIResponse struct {
@@ -25,6 +29,7 @@ type IndexData struct {
 	Updates       []UpdateModel
 	ListingsCount int64
 	UpdatesCount  int64
+	ItemsCount    int64
 }
 
 type UpdateData struct {
@@ -44,6 +49,10 @@ type NpcData struct {
 func Run() {
 	// DB
 	initDB()
+
+	// Generate Downloads
+	go buildAddonZip()
+	go buildWindowsClient()
 
 	// HTTP
 	router := httprouter.New()
@@ -66,9 +75,11 @@ func Run() {
 	router.POST("/api/v2/listings", receiveListings)
 	router.GET("/api/v2/items", fetchItems)
 	router.GET("/api/v2/listings", fetchListings)
+	router.GET("/api/v2/addon/version", fetchAddonVersion)
 
-	log.Println("Listening on :3100")
-	log.Fatal(http.ListenAndServe(":3100", router))
+	log.Println(fmt.Sprintf("TradeGuildLedgerServer %s", serverVersion))
+	log.Println(fmt.Sprintf("Listening on %s", port))
+	log.Fatal(http.ListenAndServe(port, router))
 }
 
 func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -83,9 +94,11 @@ func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	var updatesCount int64
 	var listingCount int64
+	var itemsCount int64
 
 	db.Model(&UpdateModel{}).Count(&updatesCount)
 	db.Model(&ListingModel{}).Count(&listingCount)
+	db.Model(&ItemModel{}).Count(&itemsCount)
 
 	tmpl, err := template.ParseFiles(lp, ip)
 	if err != nil {
@@ -96,6 +109,7 @@ func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		Updates:       u,
 		UpdatesCount:  updatesCount,
 		ListingsCount: listingCount,
+		ItemsCount:    itemsCount,
 	})
 	if err != nil {
 		log.Println(err)
@@ -148,5 +162,4 @@ func handleDownload(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 		return
 	}
 	w.WriteHeader(http.StatusInternalServerError)
-	return
 }

@@ -48,6 +48,7 @@ type ItemModel struct {
 	gorm.Model
 	Timestamp      int
 	Name           string
+	Slug           string
 	Quality        int
 	Texture        string
 	VersionModelID uint
@@ -96,6 +97,7 @@ type GuildModel struct {
 type NpcModel struct {
 	gorm.Model
 	Name          string
+	Slug          string
 	ListingModels []ListingModel
 	Active        bool
 }

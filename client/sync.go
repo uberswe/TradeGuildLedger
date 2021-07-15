@@ -14,9 +14,7 @@ import (
 )
 
 func syncWithRemote(p Processor) {
-	logData = append(logData, "Syncing with server...")
-	list.Refresh()
-	list.Select(len(logData) - 1)
+	addLog("Syncing with server...")
 
 	itemUrl := url + "/api/v2/items"
 
@@ -76,6 +74,11 @@ func syncWithRemote(p Processor) {
 	listingUrl := url + "/api/v2/listings"
 
 	listingsJson, err := getFromAPI(listingUrl)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	var listings []payloads.Listing
 	err = json.Unmarshal(listingsJson, &listings)
@@ -143,6 +146,11 @@ func postToAPI(url string, data []byte) ([]byte, error) {
 	addLog(fmt.Sprintf("Sending data to %s", url))
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
@@ -169,6 +177,14 @@ func getFromAPI(url string) ([]byte, error) {
 	addLog(fmt.Sprintf("Fetching data from %s", url))
 
 	req, err := http.NewRequest("GET", url, nil)
+
+	if err != nil {
+		log.Println(err)
+		addLog("Error: could not fetch data")
+		addLog("Please make sure you have the latest version of TradeGuildLedgerClient.exe")
+		return nil, err
+	}
+
 	req.Header.Set("Accept", "application/json")
 
 	client := &http.Client{}

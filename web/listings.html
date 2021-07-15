@@ -27,9 +27,9 @@
 
             {{range $index, $listing := .Listings }}
                 <tr>
-                    <td>{{ $listing.ItemName }}</td>
-                    <td>{{ $listing.PricePerUnit }} x {{ $listing.StackCount }} ({{ $listing.Price }})</td>
-                    <td>{{ $listing.TraderName }} ({{ $listing.RegionName }}) by {{ $listing.SellerName }}</td>
+                    <td><a href="/ledger/items/{{ $listing.ItemSlug }}" style="color:{{ $listing.ItemColor }};font-weight: bold;">{{ $listing.ItemName }}</a></td>
+                    <td><span style="color:#ff8c00">{{ $listing.Price }}</span>{{ if gt $listing.StackCount 1 }} (<span style="color:#ff8c00">{{ $listing.PricePerUnit }}</span> x {{ $listing.StackCount }}){{ end }}</td>
+                    <td><a href="/ledger/traders/{{ $listing.TraderSlug }}" style="font-weight: bold;">{{ $listing.TraderName }} ({{ $listing.RegionName }})</a> - Sold by {{ $listing.SellerName }}</td>
                     <td>{{ $listing.SeenHumanReadable }}</td>
                 </tr>
 

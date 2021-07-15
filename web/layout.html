@@ -1,19 +1,19 @@
 {{define "layout"}}
-    <!DOCTYPE html>
-    <html>
+<!DOCTYPE html>
+<html>
 
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>TradeGuildLeger.com</title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
-        <link rel="stylesheet" href="/vendor/bulma/css/bulma.css">
-        <link rel="stylesheet" type="text/css" href="/assets/css/main.css">
-    </head>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TradeGuildLeger.com</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/bulma/css/bulma.css">
+    <link rel="stylesheet" type="text/css" href="/assets/css/main.css">
+</head>
 
-    <body>
+<body>
 
     <!-- START NAV -->
     <nav class="navbar is-white">
@@ -39,50 +39,39 @@
                     <a class="navbar-item" href="https://github.com/uberswe/TradeGuildLedger">
                         Github
                     </a>
+                    <a class="navbar-item" href="/ledger/listings">
+                        Listings
+                    </a>
+                    <div class="navbar-item">
+                        <form method="GET" action="/ledger/listings">
+                            <div class="columns">
+                                <div class="column is-9 ">
+                                    <div class="control">
+                                        <input class="input" name="search" type="text" placeholder="">
+                                    </div>
+                                </div>
+                                <div class="column is-3 ">
+                                    <div class="control">
+                                        <div class="buttons">
+                                            <button class="button is-primary" type="submit">
+                                                <i class="fa fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-
             </div>
         </div>
     </nav>
     <!-- END NAV -->
     <div class="container">
-        <div class="columns">
-            <div class="column is-3 ">
-                <aside class="menu is-hidden-mobile">
-                    <form method="GET" action="/ledger/listings">
-                        <div class="columns">
-                            <div class="column is-9 ">
-                                <div class="control">
-                                    <input class="input" name="search" type="text" placeholder="">
-                                </div>
-                            </div>
-                            <div class="column is-3 ">
-                                <div class="control">
-                                    <div class="buttons">
-                                        <button class="button is-primary" type="submit">
-                                            <i class="fa fa-search"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                    <p class="menu-label">
-                        General
-                    </p>
-                    <ul class="menu-list">
-                        <li><a href="/ledger/listings">Listings</a></li>
-                        <li><a href="/ledger/traders">Traders</a></li>
-                        <li><a href="/ledger/events">Events</a></li>
-                    </ul>
-            </div>
-            <div class="column is-9">
-                {{template "content" .}}
-            </div>
-        </div>
+        {{template "content" .}}
     </div>
-    <script async type="text/javascript" src="assets/js/main.js"></script>
-    </body>
+    <script async type="text/javascript" src="/assets/js/main.js"></script>
+</body>
 
-    </html>
+</html>
 {{end}}

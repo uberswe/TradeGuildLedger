@@ -6,3 +6,5 @@ TradeGuildLedger/
 node_modules
 !savedvars/.gitkeep
 savedvars/*
+.DS_Store
+main

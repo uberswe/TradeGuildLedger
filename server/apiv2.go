@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gosimple/slug"
 	"github.com/julienschmidt/httprouter"
 	"github.com/uberswe/tradeguildledger/pkg/payloads"
 	"gorm.io/gorm"
@@ -37,6 +38,8 @@ func receiveItems(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
+	log.Printf("received %d items for %s\n", len(itemRequest.Items), requestId)
+
 	vm := VersionModel{
 		APIVersion:   itemRequest.APIVersion,
 		Region:       itemRequest.Region,
@@ -56,6 +59,8 @@ func receiveItems(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		}
 	}
 
+	created := 0
+
 	for _, item := range itemRequest.Items {
 		var i ItemModel
 		if r := db.First(&i, "uid = ?", item.ID); r.Error != nil && !errors.Is(r.Error, gorm.ErrRecordNotFound) {
@@ -67,6 +72,7 @@ func receiveItems(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			is := ItemModel{
 				Timestamp:      item.Timestamp,
 				Name:           formatName(item.ItemName),
+				Slug:           slug.Make(formatName(item.ItemName)),
 				Quality:        item.Quality,
 				Texture:        item.TextureName,
 				VersionModelID: vm.ID,
@@ -78,8 +84,10 @@ func receiveItems(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 				log.Println(r.Error)
 				return
 			}
+			created++
 		}
 	}
+	log.Printf("created %d items for %s\n", created, requestId)
 	log.Printf("done %s\n", requestId)
 
 	if r := db.Create(&u); r.Error != nil {
@@ -184,6 +192,7 @@ func receiveListings(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 					}
 					if nm.ID == 0 {
 						nm.Name = formatName(listing.NpcName)
+						nm.Slug = slug.Make(formatName(nm.Name))
 						// Make an admin area where this cann be approved
 						nm.Active = true
 						if r := db.Create(&nm); r.Error != nil {
@@ -220,9 +229,8 @@ func receiveListings(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 				}
 				// check if item exists
 				if r := db.First(&im, "uid = ?", listing.ItemID); r.Error != nil {
-					log.Println(listing.ItemID, listing.Link)
 					log.Println(r.Error)
-					continue
+					return
 				}
 
 				// Check if region exists
@@ -301,6 +309,19 @@ func fetchListings(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	// Response
 	w.Header().Set("Content-Type", "application/json")
 	jData, err := json.Marshal(listings)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(jData)
+}
+
+func fetchAddonVersion(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	jData, err := json.Marshal(APIResponse{
+		Message: addonVersion,
+	})
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

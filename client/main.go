@@ -1,6 +1,8 @@
 package client
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,21 +10,21 @@ import (
 	"runtime"
 	"time"
 
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/widget"
 	"github.com/fsnotify/fsnotify"
 	parser "github.com/uberswe/go-lua-table-parser"
 )
 
 var (
-	logData []string
-	list    *widget.List
-	url     = "http://localhost:3100"
-	sv      = "savedvars/TradeGuildLedger.lua"
+	logData  []string
+	list     *widget.List
+	checksum = ""
+	url      = "http://localhost:3100"
+	sv       = "savedvars/TradeGuildLedger.lua"
 )
 
 func Run() {
+	// TODO make compatible for other OSs
 	if runtime.GOOS == "windows" {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -54,9 +56,6 @@ func parseLua() {
 				}
 				log.Println("event:", event)
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					logData = append(logData, "Detected file write...")
-					list.Refresh()
-					list.Select(len(logData) - 1)
 					log.Println("modified file:", event.Name)
 
 					s, err := readFile(sv, 0)
@@ -65,6 +64,18 @@ func parseLua() {
 						log.Println(err)
 						break
 					}
+
+					// Make a checksum of the ledger content so we only update changes
+					hasher := sha1.New()
+					hasher.Write(s)
+					sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+
+					if sha == checksum {
+						log.Println("no changes")
+						break
+					}
+					addLog("Detected file write...")
+					checksum = sha
 
 					mapResult, err := parser.Parse(string(s), "TradeGuildLedgerVars")
 					if err != nil {
@@ -93,11 +104,6 @@ func parseLua() {
 		} else {
 			break
 		}
-		if failCount > 2 {
-			logData = append(logData, fmt.Sprintf("Unable to read file, please make sure the Trade Guild Ledger addon is installed: %s", sv))
-			list.Refresh()
-			list.Select(len(logData) - 1)
-		}
 		time.Sleep(5 * time.Second)
 	}
 
@@ -106,7 +112,7 @@ func parseLua() {
 
 func readFile(file string, attempt int) ([]byte, error) {
 	log.Println("Attempting to read ", file)
-	f, err := os.Open(file)
+	f, err := os.OpenFile(file, os.O_RDWR, os.FileMode(0666))
 	if err != nil {
 		if attempt < 10 {
 			log.Println(err)
@@ -127,27 +133,4 @@ func readFile(file string, attempt int) ([]byte, error) {
 		return nil, err
 	}
 	return b, nil
-}
-
-func launchUI() {
-	logData = append(logData, "Application started, waiting to send data")
-	logData = append(logData, fmt.Sprintf("Watching file: %s", sv))
-	logData = append(logData, fmt.Sprintf("API endpoint: %s", url))
-	a := app.NewWithID("com.tradeguildledger.app")
-	w := a.NewWindow("Trade Guild Ledger Client")
-	list = widget.NewList(
-		func() int {
-			return len(logData)
-		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("template")
-		},
-		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(logData[i])
-		})
-
-	w.SetContent(list)
-	w.Resize(fyne.NewSize(640, 460))
-
-	w.ShowAndRun()
 }

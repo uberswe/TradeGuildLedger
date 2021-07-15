@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/BenJetson/humantime"
+	"github.com/gosimple/slug"
 	"github.com/julienschmidt/httprouter"
 	"gorm.io/gorm"
 )
@@ -25,6 +26,8 @@ type ListingData struct {
 
 type ListingView struct {
 	ItemName                   string
+	ItemColor                  string
+	ItemSlug                   string
 	Price                      int
 	PricePerUnit               float64
 	Quality                    int
@@ -34,6 +37,7 @@ type ListingView struct {
 	SellerName                 string
 	RegionName                 string
 	TraderName                 string
+	TraderSlug                 string
 	TimeRemainingHumanReadable string
 	SeenHumanReadable          string
 }
@@ -91,8 +95,23 @@ func listings(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	for _, listing := range listings {
 		tm := time.Unix(int64(listing.Timestamp), 0)
 		shr := humantime.Since(tm)
+		if listing.ItemModel.Slug == "" {
+			listing.ItemModel.Slug = slug.Make(listing.ItemModel.Name)
+			db.Save(&listing.ItemModel)
+			if r := db.Save(&listing.ItemModel); r.Error != nil {
+				log.Println(r.Error)
+			}
+		}
+		if listing.NpcModel.Slug == "" {
+			listing.NpcModel.Slug = slug.Make(listing.NpcModel.Name)
+			if r := db.Save(&listing.NpcModel); r.Error != nil {
+				log.Println(r.Error)
+			}
+		}
 		listingViews = append(listingViews, ListingView{
 			ItemName:                   listing.ItemModel.Name,
+			ItemColor:                  ItemColor(listing.Quality),
+			ItemSlug:                   listing.ItemModel.Slug,
 			Price:                      listing.Price,
 			PricePerUnit:               listing.PricePerUnit,
 			Quality:                    listing.Quality,
@@ -100,6 +119,7 @@ func listings(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			TimeRemaining:              listing.TimeRemaining,
 			Timestamp:                  listing.Timestamp,
 			TraderName:                 listing.NpcModel.Name,
+			TraderSlug:                 listing.NpcModel.Slug,
 			SellerName:                 listing.SellerModel.At,
 			RegionName:                 listing.RegionModel.Name,
 			TimeRemainingHumanReadable: "",
@@ -118,4 +138,27 @@ func listings(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		log.Println(err)
 		return
 	}
+}
+
+func ItemColor(q int) string {
+	// Normal (white)
+	// Fine (green)
+	// Superior (blue)
+	// Epic (purple)
+	// Legendary (orange)
+	switch q {
+	case 0:
+		return "#868e96"
+	case 1:
+		return "#868e96"
+	case 2:
+		return "#40c057"
+	case 3:
+		return "#228be6"
+	case 4:
+		return "#be4bdb"
+	case 5:
+		return "#fd7e14"
+	}
+	return "#000000"
 }

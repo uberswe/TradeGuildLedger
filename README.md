@@ -19,18 +19,23 @@ The html templates use [Bulma](https://bulma.io/), the easiest way to add this i
 
 ## Client
 
-Build client for windows on mac
+### Build client for windows on mac
 ```bash
 brew install mingw-w64
 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build -ldflags -H=windowsgui cmd/client/main.go
 ```
 
-With CLI debug window
+#### With CLI debug window
 ```bash
 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 go build cmd/client/main.go
 ```
 
-Build for linux on mac
+### Build client for windows on linux
+```bash
+GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc go build -o main.exe cmd/client/main.go
+```
+
+### Build for linux on mac
 
 ## Addon
 
