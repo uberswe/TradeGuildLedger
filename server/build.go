@@ -15,8 +15,12 @@ func buildWindowsClient() {
 	// Build latest client version
 	// TODO inject version
 	log.Println("Building windows client")
+	executable := "go"
+	if runtime.GOOS == "linux" {
+		executable = "/usr/local/go/bin/go"
+	}
 	cmd := exec.Command(
-		"go",
+		executable,
 		"build",
 		"-o",
 		"./downloads/tgl.exe",
@@ -30,7 +34,7 @@ func buildWindowsClient() {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("HOME=%s", os.Getenv("HOME")))
 		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
 		cmd.Env = append(cmd.Env, "GOOS=windows")
-		cmd.Env = append(cmd.Env, "GOARCH=amd64")
+		cmd.Env = append(cmd.Env, "GOARCH=386")
 		cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
 		cmd.Env = append(cmd.Env, "CXX=i686-w64-mingw32-g++")
 		cmd.Env = append(cmd.Env, "CC=i686-w64-mingw32-gcc")
@@ -43,6 +47,7 @@ func buildWindowsClient() {
 		cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
 		cmd.Env = append(cmd.Env, "CC=x86_64-w64-mingw32-gcc")
 	}
+	log.Println(cmd.Env)
 	if err := cmd.Run(); err != nil {
 		log.Println(out.String())
 		log.Println(stderr.String())
