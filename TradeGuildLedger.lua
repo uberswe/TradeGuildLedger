@@ -22,7 +22,7 @@ function TradeGuildLedger:Initialize()
         TradeGuildLedger.savedVariables.items = {}
         TradeGuildLedger.savedVariables.npcs = {}
         TradeGuildLedger.savedVariables.guilds = {}
-        TradeGuildLedger.savedVariables.tglv = "0.0.1"
+        TradeGuildLedger.savedVariables.tglv = "{{ .Version }}"
     end
     TradeGuildLedger.savedVariables.region = TradeGuildLedger.GetRegion()
     local timestamp = GetTimeStamp()

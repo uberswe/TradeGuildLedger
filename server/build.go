@@ -9,7 +9,13 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
+	"text/template"
 )
+
+type AddonData struct {
+	Version string
+}
 
 func buildWindowsClient() {
 	// Build latest client version
@@ -22,6 +28,8 @@ func buildWindowsClient() {
 	cmd := exec.Command(
 		executable,
 		"build",
+		"-ldflags",
+		"-H=windowsgui",
 		"-o",
 		"./downloads/tgl.exe",
 		"./cmd/client/main.go")
@@ -47,7 +55,6 @@ func buildWindowsClient() {
 		cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
 		cmd.Env = append(cmd.Env, "CC=x86_64-w64-mingw32-gcc")
 	}
-	log.Println(cmd.Env)
 	if err := cmd.Run(); err != nil {
 		log.Println(out.String())
 		log.Println(stderr.String())
@@ -71,7 +78,7 @@ func buildAddonZip() {
 		"./TradeGuildLedger.txt",
 	}
 	for _, file := range files {
-		f, err := w.Create(file)
+		f, err := w.Create(strings.TrimPrefix(file, "./"))
 		if err != nil {
 			log.Println(err)
 			return
@@ -81,7 +88,18 @@ func buildAddonZip() {
 			log.Println(err)
 			return
 		}
-		_, err = f.Write(content)
+		tmpl, err := template.New("lua").Parse(string(content))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		buf := &bytes.Buffer{}
+		err = tmpl.Execute(buf, AddonData{Version: serverVersion})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = f.Write(buf.Bytes())
 		if err != nil {
 			log.Println(err)
 			return
