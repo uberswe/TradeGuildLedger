@@ -88,7 +88,7 @@ func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	lp := filepath.Join("web", "layout.html")
 	ip := filepath.Join("web", "index.html")
 	var u []UpdateModel
-	if res := db.Find(&u).Order("id asc").Limit(30); res.Error != nil && !errors.Is(res.Error, gorm.ErrRecordNotFound) {
+	if res := db.Order("id desc").Limit(30).Find(&u); res.Error != nil && !errors.Is(res.Error, gorm.ErrRecordNotFound) {
 		log.Println(res.Error)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
