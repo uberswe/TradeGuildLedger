@@ -24,6 +24,27 @@ type ListingData struct {
 	Search     string
 }
 
+type TraderData struct {
+	Listings   []ListingView
+	Offset     int
+	NextOffset int
+	PrevOffset int
+	Search     string
+	TraderName string
+	RegionName string
+	Slug       string
+}
+
+type ItemData struct {
+	Listings   []ListingView
+	Offset     int
+	NextOffset int
+	PrevOffset int
+	Search     string
+	ItemName   string
+	Slug       string
+}
+
 type ListingView struct {
 	ItemName                   string
 	ItemColor                  string
@@ -91,7 +112,7 @@ func listings(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		return
 	}
 
-	listingViews := []ListingView{}
+	var listingViews []ListingView
 	for _, listing := range listings {
 		tm := time.Unix(int64(listing.Timestamp), 0)
 		shr := humantime.Since(tm)

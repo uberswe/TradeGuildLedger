@@ -1,12 +1,14 @@
 # TradeGuildLedger
 
-Use at your own risk, this project is in alpha
+Use at your own risk, this project is in alpha.
 
 The website can be found at [TradeGuildLedger.com](https://www.TradeGuildLedger.com)
 
 This is an addon for Elder Scrolls Online which simply takes Guild Trader listings and saves them locally on your machine. A client can then be run in order to upload this data to a server to display it.
 
 The addon is written in Lua and the client and server are both written in Go. The project should run on Linux, MacOS or Windows. The client is currently only tested on Windows and the server is tested on Linux.
+
+Created by @uberswe, feel free to write me in-game if you have questions.
 
 ## Server
 
@@ -40,3 +42,7 @@ GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-min
 ## Addon
 
 The addon is written in Lua and currently kept very basic. It reads listings when you view them in game and saves that data when the ui is reloaded or whenever the game triggers a write of saved variables. 
+
+## Disclaimer
+
+TradeGuildLedger is in no way related to Bethesda Softworks, ZeniMax Online Studios, or ZeniMax Media.

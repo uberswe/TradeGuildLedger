@@ -36,6 +36,7 @@ type FullListing struct {
 
 type SendItemsRequest struct {
 	APIVersion   string     `json:"api_version"`
+	APIKey       string     `json:"api_key"`
 	Region       string     `json:"region"`
 	AddonVersion string     `json:"addon_version"`
 	Items        []FullItem `json:"items"`
@@ -43,6 +44,7 @@ type SendItemsRequest struct {
 
 type SendListingsRequest struct {
 	APIVersion   string        `json:"api_version"`
+	APIKey       string        `json:"api_key"`
 	Region       string        `json:"region"`
 	AddonVersion string        `json:"addon_version"`
 	Listings     []FullListing `json:"listings"`

@@ -1,10 +1,12 @@
 {{define "content"}}
     <section>
+        <h2>{{ .ItemName }}</h2>
+        <p><b>Coming soon:</b> item stats, listing counts, price averages, etc.</p>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+            <a href="/ledger/item/{{ .Slug }}/{{ .PrevOffset }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+            <a href="/ledger/item/{{ .Slug }}/{{ .NextOffset }}" class="button">Next</a>
         {{ end }}
         <table class="table">
             <thead>
@@ -37,10 +39,10 @@
             </tbody>
         </table>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+            <a href="/ledger/item/{{ .Slug }}/{{ .PrevOffset }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+            <a href="/ledger/item/{{ .Slug }}/{{ .NextOffset }}" class="button">Next</a>
         {{ end }}
     </section>
 {{ end }}

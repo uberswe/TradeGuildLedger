@@ -60,6 +60,7 @@ func syncWithRemote(p Processor) {
 	if len(payloadItems) > 0 {
 		b, err := json.Marshal(payloads.SendItemsRequest{
 			Items:        payloadItems,
+			APIKey:       apiKey,
 			APIVersion:   p.apiV,
 			AddonVersion: p.version,
 			Region:       p.region,
@@ -68,7 +69,12 @@ func syncWithRemote(p Processor) {
 			log.Println(err)
 			return
 		}
-		postToAPI(itemUrl, b)
+		res, err := postToAPI(itemUrl, b)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println(res)
 	}
 
 	listingUrl := url + "/api/v2/listings"
@@ -128,6 +134,7 @@ func syncWithRemote(p Processor) {
 	if len(payloadListings) > 0 {
 		b, err := json.Marshal(payloads.SendListingsRequest{
 			Listings:     payloadListings,
+			APIKey:       apiKey,
 			APIVersion:   p.apiV,
 			AddonVersion: p.version,
 			Region:       p.region,
@@ -136,7 +143,12 @@ func syncWithRemote(p Processor) {
 			log.Println(err)
 			return
 		}
-		postToAPI(listingUrl, b)
+		res, err := postToAPI(listingUrl, b)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println(res)
 	}
 
 	addLog(fmt.Sprintf("Last processed at %s", time.Now().Format("2006-01-02 15:04:05")))

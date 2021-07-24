@@ -1,17 +1,19 @@
 {{define "content"}}
     <section>
+        <h2>{{ .TraderName }} ({{ .RegionName }})</h2>
+        <p><b>Coming soon:</b> trader stats, listing counts, price averages, etc.</p>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+            <a href="/ledger/trader/{{ .Slug }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+            <a href="/ledger/trader/{{ .Slug }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
         {{ end }}
         <table class="table">
             <thead>
             <tr>
                 <th>Item Name</th>
                 <th>Price</th>
-                <th>Trader</th>
+                <th>Seller</th>
                 <th>Seen</th>
             </tr>
             </thead>
@@ -19,7 +21,7 @@
             <tr>
                 <th>Item Name</th>
                 <th>Price</th>
-                <th>Trader</th>
+                <th>Seller</th>
                 <th>Seen</th>
             </tr>
             </tfoot>
@@ -29,7 +31,7 @@
                 <tr>
                     <td><a href="/ledger/item/{{ $listing.ItemSlug }}" style="color:{{ $listing.ItemColor }};font-weight: bold;">{{ $listing.ItemName }}</a></td>
                     <td><span style="color:#ff8c00">{{ $listing.Price }}</span>{{ if gt $listing.StackCount 1 }} (<span style="color:#ff8c00">{{ $listing.PricePerUnit }}</span> x {{ $listing.StackCount }}){{ end }}</td>
-                    <td><a href="/ledger/trader/{{ $listing.TraderSlug }}" style="font-weight: bold;">{{ $listing.TraderName }} ({{ $listing.RegionName }})</a> - {{ $listing.SellerName }}</td>
+                    <td>{{ $listing.SellerName }}</td>
                     <td>{{ $listing.SeenHumanReadable }}</td>
                 </tr>
 
@@ -37,10 +39,10 @@
             </tbody>
         </table>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+            <a href="/ledger/trader/{{ .Slug }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+            <a href="/ledger/trader/{{ .Slug }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
         {{ end }}
     </section>
 {{ end }}

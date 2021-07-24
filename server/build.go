@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strings"
 	"text/template"
+	"time"
 )
 
 type AddonData struct {
@@ -19,7 +20,7 @@ type AddonData struct {
 
 func buildWindowsClient() {
 	// Build latest client version
-	// TODO inject version
+	// TODO inject version specific for each client
 	log.Println("Building windows client")
 	executable := "go"
 	if runtime.GOOS == "linux" {
@@ -29,7 +30,7 @@ func buildWindowsClient() {
 		executable,
 		"build",
 		"-ldflags",
-		"-H=windowsgui",
+		fmt.Sprintf("-H=windowsgui -X 'main.Version=%s' -X 'main.BuildTime=%s' -X 'main.APIKey=%s'", serverVersion, time.Now().Format(time.RFC3339), "DEV"),
 		"-o",
 		"./downloads/tgl.exe",
 		"./cmd/client/main.go")

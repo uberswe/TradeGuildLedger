@@ -63,8 +63,10 @@ func Run() {
 	router.GET("/downloads/:type", handleDownload)
 	router.GET("/ledger/listings", listings)
 	router.GET("/ledger/listings/:offset", listings)
+	router.GET("/ledger/item/:slug", item)
 	router.GET("/ledger/traders", traders)
 	router.GET("/ledger/traders/:offset", traders)
+	router.GET("/ledger/trader/:slug", trader)
 	router.GET("/ledger/events", events)
 	router.GET("/ledger/events/:offset", events)
 
@@ -86,7 +88,7 @@ func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	lp := filepath.Join("web", "layout.html")
 	ip := filepath.Join("web", "index.html")
 	var u []UpdateModel
-	if res := db.Find(&u).Order("id desc").Limit(30); res.Error != nil && !errors.Is(res.Error, gorm.ErrRecordNotFound) {
+	if res := db.Find(&u).Order("id asc").Limit(30); res.Error != nil && !errors.Is(res.Error, gorm.ErrRecordNotFound) {
 		log.Println(res.Error)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

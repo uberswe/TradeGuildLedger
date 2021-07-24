@@ -35,7 +35,7 @@ func events(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var updates []UpdateModel
 	if res := db.Offset(offsetCount * limit).
 		Limit(limit).
-		Order("id desc").
+		Order("id asc").
 		Find(&updates); res.Error != nil && !errors.Is(res.Error, gorm.ErrRecordNotFound) {
 		log.Println(res.Error)
 		w.WriteHeader(http.StatusInternalServerError)

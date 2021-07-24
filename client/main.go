@@ -1,10 +1,7 @@
 package client
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -16,14 +13,22 @@ import (
 )
 
 var (
-	logData  []string
-	list     *widget.List
-	checksum = ""
-	url      = "http://localhost:3100"
-	sv       = "savedvars/TradeGuildLedger.lua"
+	logData   []string
+	list      *widget.List
+	url       = "http://localhost:3100"
+	sv        = "savedvars/TradeGuildLedger.lua"
+	version   = "0.0.0"
+	apiKey    = "DEV"
+	buildTime = ""
 )
 
-func Run() {
+func Run(v string, a string, bt string) {
+	version = v
+	apiKey = a
+	buildTime = bt
+	log.Println("Running client version", version)
+	log.Println("Build time", buildTime)
+	log.Println("API key", apiKey)
 	// TODO make compatible for other OSs
 	if runtime.GOOS == "windows" {
 		home, err := os.UserHomeDir()
@@ -58,26 +63,8 @@ func parseLua() {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
 
-					s, err := readFile(sv, 0)
+					mapResult, err := readFile(sv, 0)
 
-					if err != nil {
-						log.Println(err)
-						break
-					}
-
-					// Make a checksum of the ledger content so we only update changes
-					hasher := sha1.New()
-					hasher.Write(s)
-					sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-
-					if sha == checksum {
-						log.Println("no changes")
-						break
-					}
-					addLog("Detected file write...")
-					checksum = sha
-
-					mapResult, err := parser.Parse(string(s), "TradeGuildLedgerVars")
 					if err != nil {
 						log.Println(err)
 						break
@@ -110,7 +97,7 @@ func parseLua() {
 	<-done
 }
 
-func readFile(file string, attempt int) ([]byte, error) {
+func readFile(file string, attempt int) (map[string]interface{}, error) {
 	log.Println("Attempting to read ", file)
 	f, err := os.OpenFile(file, os.O_RDWR, os.FileMode(0666))
 	if err != nil {
@@ -128,7 +115,7 @@ func readFile(file string, attempt int) ([]byte, error) {
 		}
 	}()
 
-	b, err := ioutil.ReadAll(f)
+	b, err := parser.Parse(f, "TradeGuildLedgerVars")
 	if err != nil {
 		return nil, err
 	}
