@@ -115,7 +115,7 @@ func readFile(file string, attempt int) (map[string]interface{}, error) {
 		}
 	}()
 
-	b, err := parser.Parse(f, "TradeGuildLedgerVars")
+	b, err := parser.ParseFile(f, "TradeGuildLedgerVars")
 	if err != nil {
 		return nil, err
 	}

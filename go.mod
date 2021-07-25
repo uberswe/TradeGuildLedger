@@ -9,7 +9,7 @@ require (
 	github.com/fsnotify/fsnotify v1.4.9
 	github.com/gosimple/slug v1.9.0
 	github.com/julienschmidt/httprouter v1.3.0
-	github.com/uberswe/go-lua-table-parser v0.0.0-20210710222449-51529ce4e8c9
+	github.com/uberswe/go-lua-table-parser v0.0.0-20210725011314-cffff49b5750
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.11
 )

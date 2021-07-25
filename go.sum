@@ -64,6 +64,8 @@ github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/uberswe/go-lua-table-parser v0.0.0-20210710222449-51529ce4e8c9 h1:1PoZWcJMqAw9QZ+OMlz6dYZOuManq/sm8CTSTYPxxns=
 github.com/uberswe/go-lua-table-parser v0.0.0-20210710222449-51529ce4e8c9/go.mod h1:mnC5ZlUu0deVnwSXwVlwcZnOQuz0CgWct+JJnRMYNTM=
+github.com/uberswe/go-lua-table-parser v0.0.0-20210725011314-cffff49b5750 h1:34oe5ftIkoIe8ncOTaSRlDqfD7q8yO07f5QzE2ZyubI=
+github.com/uberswe/go-lua-table-parser v0.0.0-20210725011314-cffff49b5750/go.mod h1:mnC5ZlUu0deVnwSXwVlwcZnOQuz0CgWct+JJnRMYNTM=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9 h1:k/gmLsJDWwWqbLCur2yWnJzwQEKRcAHXo6seXGuSwWw=
 github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9/go.mod h1:E1AXubJBdNmFERAOucpDIxNzeGfLzg0mYh+UfMWdChA=
