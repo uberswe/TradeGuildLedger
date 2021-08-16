@@ -1,7 +1,8 @@
 ## Title: Trade Guild Ledger
 ## APIVersion: 100035
 ## Version: {{ .Version }}
-## Author: TradeGuildLedger.com (@uberswe)
+## Author: TradeGuildLedger.com (@uberswe (PC/EU))
 ## SavedVariables: TradeGuildLedgerVars
 
 TradeGuildLedger.lua
+TradeGuildLedgerItems.lua

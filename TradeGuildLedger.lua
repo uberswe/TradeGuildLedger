@@ -3,49 +3,49 @@ TradeGuildLedger = {}
 TradeGuildLedger.name = "TradeGuildLedger"
 
 function TradeGuildLedger:Initialize()
-    self.savedVariables = ZO_SavedVars:NewAccountWide("TradeGuildLedgerVars", 2, nil, {})
+    TradeGuildLedger.savedVariables = ZO_SavedVars:NewAccountWide("TradeGuildLedgerVars", 3, nil, {}, GetWorldName())
+
+    TradeGuildLedger.savedVariables.world = table.concat({ "w", GetWorldName() }, ":")
+
     if (TradeGuildLedger.savedVariables.regions == nil) then
         TradeGuildLedger.savedVariables.regions = {}
     end
     if (TradeGuildLedger.savedVariables.items == nil) then
         TradeGuildLedger.savedVariables.items = {}
     end
-    if (TradeGuildLedger.savedVariables.npcs == nil) then
-        TradeGuildLedger.savedVariables.npcs = {}
+    if (TradeGuildLedger.savedVariables.traits == nil) then
+        TradeGuildLedger.savedVariables.traits = {}
+    end
+    if (TradeGuildLedger.savedVariables.listings == nil) then
+        TradeGuildLedger.savedVariables.listings = {}
+    end
+    if (TradeGuildLedger.savedVariables.buys == nil) then
+        TradeGuildLedger.savedVariables.buys = {}
     end
     if (TradeGuildLedger.savedVariables.guilds == nil) then
         TradeGuildLedger.savedVariables.guilds = {}
     end
+
     -- Migrations
-    if (TradeGuildLedger.savedVariables.tglv ~= "0.0.1") then
+    if (TradeGuildLedger.savedVariables.tglv ~= "{{ .Version }}") then
         -- Initial version, clear all previous data
         TradeGuildLedger.savedVariables.items = {}
-        TradeGuildLedger.savedVariables.npcs = {}
+        TradeGuildLedger.savedVariables.listings = {}
+        TradeGuildLedger.savedVariables.buys = {}
         TradeGuildLedger.savedVariables.guilds = {}
+        TradeGuildLedger.savedVariables.regions = {}
+        TradeGuildLedger.savedVariables.traits = {}
         TradeGuildLedger.savedVariables.tglv = "{{ .Version }}"
     end
-    TradeGuildLedger.savedVariables.region = TradeGuildLedger.GetRegion()
-    local timestamp = GetTimeStamp()
-    for k, v in pairs(TradeGuildLedger.savedVariables.npcs) do
-        for k2, v2 in pairs(v) do
-            if type(v2) == "table" then
-                for k3, v3 in pairs(v2) do
-                    -- remove entries older than 24 hours
-                    if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
-                        table.remove(TradeGuildLedger.savedVariables.npcs[k][k2], k3)
-                    end
-                end
-            end
-        end
-    end
-    for k, v in pairs(TradeGuildLedger.savedVariables.guilds) do
-        for k2, v2 in pairs(v) do
-            for k3, v3 in pairs(v2) do
-                -- remove entries older than 24 hours
-                if (v3.ts == nil or (v3.ts + 86400) < timestamp) then
-                    table.remove(TradeGuildLedger.savedVariables.guilds[k][k2], k3)
-                end
-            end
+
+end
+
+function TradeGuildLedger.OnPlayerActivated(eventCode)
+    -- Get rid of listings older than 24 hours
+    local timestamp = GetTimeStamp() - (60 * 60 * 24)
+    for k, v in pairs(TradeGuildLedger.savedVariables.listings) do
+        if (string.len(TradeGuildLedger.GetTsForListing(v)) == 0 or tonumber(TradeGuildLedger.GetTsForListing(v)) < timestamp) then
+            table.remove(TradeGuildLedger.savedVariables.listings, k)
         end
     end
 end
@@ -54,8 +54,16 @@ function TradeGuildLedger.OnAddOnLoaded(event, addonName)
     -- The event fires each time *any* addon loads - but we only care about when our own addon loads.
     if addonName == TradeGuildLedger.name then
         TradeGuildLedger:Initialize()
+
+        -- Unregister Loaded Callback
+        EVENT_MANAGER:UnregisterForEvent(TradeGuildLedger.name, EVENT_ADD_ON_LOADED)
+
+        -- Register for player activated event
+        EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_PLAYER_ACTIVATED, TradeGuildLedger.OnPlayerActivated)
     end
 end
+
+EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_ADD_ON_LOADED, TradeGuildLedger.OnAddOnLoaded)
 
 function TradeGuildLedger.OnTradingHouseResponseReceived(eventCode, responseType, result)
     if (responseType == TRADING_HOUSE_RESULT_SEARCH_PENDING) then
@@ -66,29 +74,34 @@ function TradeGuildLedger.OnTradingHouseResponseReceived(eventCode, responseType
 end
 
 function TradeGuildLedger.ProcessSearchResults()
-    local region = GetCurrentMapZoneIndex()
     local numItemsOnPage, _, _ = GetTradingHouseSearchResultsInfo()
     local npc = GetRawUnitName("interact")
-    if (TradeGuildLedger.savedVariables.npcs[npc] == nil) then
-        TradeGuildLedger.savedVariables.npcs[npc] = {}
+    local region = GetUnitZoneIndex("interact")
+    if region == nil then
+        region = GetCurrentMapZoneIndex()
     end
-    if (TradeGuildLedger.savedVariables.npcs[npc].items == nil) then
-        TradeGuildLedger.savedVariables.npcs[npc].items = {}
-    end
-    if (TradeGuildLedger.savedVariables.regions[region] == nil) then
-        TradeGuildLedger.savedVariables.regions[region] = { name = GetZoneNameByIndex(region) }
-    end
+    local guildId, _, _ = GetCurrentTradingHouseGuildDetails()
+    local guildName = GetGuildName(guildId)
     local timestamp = GetTimeStamp()
+    if (region ~= nil and TradeGuildLedger.savedVariables.regions[region] == nil) then
+        TradeGuildLedger.savedVariables.regions[region] = table.concat({ "r", timestamp, region, GetZoneNameByIndex(region) }, ":")
+    end
     for i = 1, numItemsOnPage do
         local link = GetTradingHouseSearchResultItemLink(i)
         local id = TradeGuildLedger.GetIdFromLink(link)
+        local traitType, traitDescription = GetItemLinkTraitInfo(link);
         -- textureName icon, string itemName, number quality, number stackCount, string sellerName, number timeRemaining, number purchasePrice, number CurrencyType currencyType, id64 itemUniqueId, number purchasePricePerUnit
         local textureName, itemName, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, uid, purchasePricePerUnit = GetTradingHouseSearchResultItemInfo(i)
-        table.insert(TradeGuildLedger.savedVariables.npcs[npc].items, { ts = timestamp, item = id, link=link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = purchasePrice, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
-        TradeGuildLedger.savedVariables.npcs[npc].region = region
-        if (TradeGuildLedger.savedVariables.items[id] == nil) then
-            TradeGuildLedger.savedVariables.items[id] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
+        table.insert(TradeGuildLedger.savedVariables.listings, table.concat({ "l", timestamp, id, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, Id64ToString(uid), purchasePricePerUnit, guildId, npc, region, link, traitType, (timestamp + id + purchasePrice - (purchasePricePerUnit * 3)) }, ":"))
+        if (id ~= nil and TradeGuildLedger.savedVariables.items[id] == nil) then
+            TradeGuildLedger.savedVariables.items[id] = table.concat({ "i", timestamp, id, quality, textureName, itemName, traitType }, ":")
         end
+        if (traitType ~= nil and TradeGuildLedger.savedVariables.traits[traitType] == nil) then
+            TradeGuildLedger.savedVariables.traits[traitType] = table.concat({ "t", timestamp, traitType, traitDescription }, ":")
+        end
+    end
+    if (guildId ~= nil and guildName ~= "" and TradeGuildLedger.savedVariables.guilds[guildId] == nil) then
+        TradeGuildLedger.savedVariables.guilds[guildId] = table.concat({ "g", timestamp, guildId, guildName }, ":")
     end
 end
 
@@ -97,46 +110,58 @@ function TradeGuildLedger.GetIdFromLink(link)
     return string.match(link, "item:([0-9]+):")
 end
 
+function TradeGuildLedger.GetTsForListing(s)
+    return string.match(s, "l:([0-9]+):")
+end
+
+function TradeGuildLedger.GetTsForItem(s)
+    return string.match(s, "i:([0-9]+):")
+end
+
 function TradeGuildLedger.ProcessGuildListings()
-    local guildID, _, _ = GetCurrentTradingHouseGuildDetails()
-    local guildName = GetGuildName(guildID)
+    local guildId, guildName, _ = GetCurrentTradingHouseGuildDetails()
+    if (guildId == 0 or guildName == "") then
+        return
+    end
     local numListing = GetNumTradingHouseListings()
-    if (TradeGuildLedger.savedVariables.guilds[guildName] == nil) then
-        TradeGuildLedger.savedVariables.guilds[guildName] = {}
-    end
-    if (TradeGuildLedger.savedVariables.guilds[guildName].items == nil) then
-        TradeGuildLedger.savedVariables.guilds[guildName].items = {}
-    end
     local timestamp = GetTimeStamp()
     for i = 1, numListing do
         local link = GetTradingHouseListingItemLink(i)
         local id = TradeGuildLedger.GetIdFromLink(link)
+        local traitType, traitDescription = GetItemLinkTraitInfo(link);
         local textureName, itemName, quality, stackCount, sellerName, timeRemaining, price, currencyType, uid, purchasePricePerUnit = GetTradingHouseListingItemInfo(i)
-        table.insert(TradeGuildLedger.savedVariables.guilds[guildName].items, { ts = timestamp, item = id, link=link, quality = quality, sc = stackCount, sn = sellerName, tr = timeRemaining, pp = purchasePrice, ct = currencyType, uid = uid, pppu = purchasePricePerUnit })
-        if (TradeGuildLedger.savedVariables.items[id] == nil) then
-            TradeGuildLedger.savedVariables.items[id] = { ts = timestamp, tn = textureName, itn = itemName, quality = quality }
+        table.insert(TradeGuildLedger.savedVariables.listings, table.concat({ "l", timestamp, id, quality, stackCount, sellerName, timeRemaining, price, currencyType, Id64ToString(uid), purchasePricePerUnit, guildId, "", "", link, traitType, (timestamp + id + price - (purchasePricePerUnit * 3)) }, ":"))
+        if (id ~= nil and TradeGuildLedger.savedVariables.items[id] == nil) then
+            TradeGuildLedger.savedVariables.items[id] = table.concat({ "i", timestamp, id, quality, textureName, itemName, traitType }, ":")
+        end
+        if (traitType ~= nil and TradeGuildLedger.savedVariables.traits[traitType] == nil) then
+            TradeGuildLedger.savedVariables.traits[traitType] = table.concat({ "t", timestamp, traitType, traitDescription }, ":")
         end
     end
-end
-
-function TradeGuildLedger.OnTradingHouseConfirmItemPurchase(eventCode, pendingPurchaseIndex)
-    -- TODO implement purchase tracking
-end
-
-function TradeGuildLedger.GetRegion()
-    local lastPlatform = GetCVar("LastPlatform")
-    local lastRealm = GetCVar("LastRealm")
-    if (lastPlatform == "Live") then
-        return "NA"
-    elseif (lastPlatform == "Live-EU") then
-        return "EU"
-    elseif (lastRealm:find("^NA") ~= nil) then
-        return "NA"
+    if (guildId ~= nil and TradeGuildLedger.savedVariables.guilds[guildId] == nil) then
+        TradeGuildLedger.savedVariables.guilds[guildId] = table.concat({ "g", timestamp, guildId, guildName }, ":")
     end
-    return "EU"
+end
+
+function TradeGuildLedger.OnTradingHouseConfirmItemPurchase(eventCode, slotId)
+    local textureName, itemName, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, uid, purchasePricePerUnit = GetTradingHouseSearchResultItemInfo(slotId)
+    local guildId, guildName, _ = GetCurrentTradingHouseGuildDetails()
+    local timestamp = GetTimeStamp()
+    local link = GetTradingHouseSearchResultItemLink(slotId)
+    local id = TradeGuildLedger.GetIdFromLink(link)
+    local traitType, traitDescription = GetItemLinkTraitInfo(link);
+    table.insert(TradeGuildLedger.savedVariables.buys, table.concat({ "s", timestamp, id, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, Id64ToString(uid), purchasePricePerUnit, guildName, guildId, link }, ":"))
+    if (traitType ~= nil and TradeGuildLedger.savedVariables.traits[traitType] == nil) then
+        TradeGuildLedger.savedVariables.traits[traitType] = table.concat({ "t", timestamp, traitType, traitDescription }, ":")
+    end
+    if (id ~= nil and TradeGuildLedger.savedVariables.items[id] == nil) then
+        TradeGuildLedger.savedVariables.items[id] = table.concat({ "i", timestamp, id, quality, textureName, itemName, traitType}, ":")
+    end
+    if (guildId ~= nil and TradeGuildLedger.savedVariables.guilds[guildId] == nil) then
+        TradeGuildLedger.savedVariables.guilds[guildId] = table.concat({ "g", timestamp, guildId, guildName }, ":")
+    end
 end
 
 -- Register event handler functions
-EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_ADD_ON_LOADED, TradeGuildLedger.OnAddOnLoaded)
 EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_RESPONSE_RECEIVED, TradeGuildLedger.OnTradingHouseResponseReceived)
 EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_CONFIRM_ITEM_PURCHASE, TradeGuildLedger.OnTradingHouseConfirmItemPurchase)

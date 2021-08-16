@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/uberswe/tradeguildledger/pkg/parser"
 	"log"
 	"os"
 	"runtime"
@@ -9,7 +10,6 @@ import (
 
 	"fyne.io/fyne/v2/widget"
 	"github.com/fsnotify/fsnotify"
-	parser "github.com/uberswe/go-lua-table-parser"
 )
 
 var (
@@ -20,6 +20,7 @@ var (
 	version   = "0.0.0"
 	apiKey    = "DEV"
 	buildTime = ""
+	lastLen   = 0
 )
 
 func Run(v string, a string, bt string) {
@@ -63,14 +64,17 @@ func parseLua() {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					log.Println("modified file:", event.Name)
 
-					mapResult, err := readFile(sv, 0)
-
-					if err != nil {
-						log.Println(err)
-						break
+					data, err := parser.LuaChunkParser(sv)
+					if len(data.Listings) != lastLen {
+						lastLen = len(data.Listings)
+						if err != nil {
+							log.Println(err)
+						} else {
+							go syncWithRemote(data)
+						}
+					} else {
+						log.Println("number of listings is the same, skipping")
 					}
-
-					go process(mapResult)
 				}
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -89,35 +93,17 @@ func parseLua() {
 			log.Println(err)
 			failCount++
 		} else {
+			data, err := parser.LuaChunkParser(sv)
+			if err != nil {
+				log.Println(err)
+			} else {
+				lastLen = len(data.Listings)
+				go syncWithRemote(data)
+			}
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
 
 	<-done
-}
-
-func readFile(file string, attempt int) (map[string]interface{}, error) {
-	log.Println("Attempting to read ", file)
-	f, err := os.OpenFile(file, os.O_RDWR, os.FileMode(0666))
-	if err != nil {
-		if attempt < 10 {
-			log.Println(err)
-			time.Sleep(1 * time.Second)
-			return readFile(file, attempt+1)
-		}
-		return nil, err
-	}
-
-	defer func() {
-		if err = f.Close(); err != nil {
-			fmt.Println(err)
-		}
-	}()
-
-	b, err := parser.ParseFile(f, "TradeGuildLedgerVars")
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
 }

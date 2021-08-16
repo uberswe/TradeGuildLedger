@@ -16,13 +16,14 @@ import (
 
 var (
 	db            *gorm.DB
-	addonVersion  = "0.0.1"
-	serverVersion = "0.0.1"
+	addonVersion  = "0.0.2"
+	serverVersion = "0.0.2"
 	port          = ":3100"
 )
 
 type APIResponse struct {
-	Message string
+	Message   string
+	RequestID string
 }
 
 type IndexData struct {
@@ -71,13 +72,15 @@ func Run() {
 	router.GET("/ledger/events/:offset", events)
 
 	// API
-	router.POST("/api/v1/receive", receive)
+	router.POST("/api/v1/receive", removed)
 
-	router.POST("/api/v2/items", receiveItems)
-	router.POST("/api/v2/listings", receiveListings)
-	router.GET("/api/v2/items", fetchItems)
-	router.GET("/api/v2/listings", fetchListings)
+	router.POST("/api/v2/items", removed)
+	router.POST("/api/v2/listings", removed)
+	router.GET("/api/v2/items", removed)
+	router.GET("/api/v2/listings", removed)
 	router.GET("/api/v2/addon/version", fetchAddonVersion)
+
+	router.POST("/api/v3/receive", receiveData)
 
 	log.Println(fmt.Sprintf("TradeGuildLedgerServer %s", serverVersion))
 	log.Println(fmt.Sprintf("Listening on %s", port))
