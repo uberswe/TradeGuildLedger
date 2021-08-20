@@ -47,7 +47,14 @@ type NpcData struct {
 	PrevOffset int
 }
 
+func env() {
+	if envPort, isset := os.LookupEnv("HTTP_PORT"); isset {
+		port = envPort
+	}
+}
+
 func Run() {
+	env()
 	// DB
 	initDB()
 

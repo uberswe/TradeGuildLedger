@@ -43,6 +43,7 @@ func buildWindowsClient() {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("HOME=%s", os.Getenv("HOME")))
 		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
 		cmd.Env = append(cmd.Env, "GOOS=windows")
+		cmd.Env = append(cmd.Env, "GO386=softfloat")
 		cmd.Env = append(cmd.Env, "GOARCH=386")
 		cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
 		cmd.Env = append(cmd.Env, "CXX=i686-w64-mingw32-g++")

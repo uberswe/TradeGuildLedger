@@ -15,7 +15,7 @@ import (
 var (
 	logData   []string
 	list      *widget.List
-	url       = "http://localhost:3100"
+	url       = "https://www.tradeguildledger.com"
 	sv        = "savedvars/TradeGuildLedger.lua"
 	version   = "0.0.0"
 	apiKey    = "DEV"
@@ -23,22 +23,34 @@ var (
 	lastLen   = 0
 )
 
+func env() {
+	if envSv, isset := os.LookupEnv("SAVED_VARIABLE_FILE"); isset {
+		sv = envSv
+	}
+	if envURL, isset := os.LookupEnv("REMOTE_SERVER"); isset {
+		url = envURL
+	}
+}
+
 func Run(v string, a string, bt string) {
+	env()
 	version = v
 	apiKey = a
 	buildTime = bt
 	log.Println("Running client version", version)
 	log.Println("Build time", buildTime)
 	log.Println("API key", apiKey)
-	// TODO make compatible for other OSs
+	home, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	if runtime.GOOS == "windows" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
 		sv = fmt.Sprintf("%s\\Documents\\Elder Scrolls Online\\live\\SavedVariables\\TradeGuildLedger.lua", home)
-		url = "https://www.tradeguildledger.com"
+	} else if runtime.GOOS == "linux" {
+		sv = fmt.Sprintf("%s/.steam/steam/steamapps/compatdata/306130/pfx/drive_c/users/steamuser/My Documents/Elder Scrolls Online/live/SavedVariables/TradeGuildLedger.lua", home)
+	} else if runtime.GOOS == "darwin" {
+		sv = fmt.Sprintf("%s/Documents/Elder Scrolls Online/live/SavedVariables/TradeGuildLedger.lua", home)
 	}
 
 	go parseLua()
@@ -98,6 +110,8 @@ func parseLua() {
 				log.Println(err)
 			} else {
 				lastLen = len(data.Listings)
+				// Wait one second during startup, sometimes the application loads a bit too fast
+				time.Sleep(1 * time.Second)
 				go syncWithRemote(data)
 			}
 			break
