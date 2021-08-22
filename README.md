@@ -60,7 +60,24 @@ The html templates use [Bulma](https://bulma.io/), the easiest way to add this i
 
 ## Local development
 
+I provided a docker-compose file to make it easy to run the server locally, use the following command to start the server:
 
+```bash
+docker-compose up --build -d
+```
+
+Your server will now run at [http://localhost:8080/](http://localhost:8080/) 
+
+You can tail the logs with this command:
+```bash
+docker-compose logs -f
+```
+
+Then to run the client use the following command:
+
+```bash
+REMOTE_SERVER=http://localhost:8080 go run cmd/client/main.go 
+```
 
 ## Addon
 
