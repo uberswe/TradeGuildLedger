@@ -1,25 +1,28 @@
 {{define "layout"}}
-<!DOCTYPE html>
-<html>
+    <!DOCTYPE html>
+    <html>
 
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TradeGuildLeger.com</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
-    <link rel="stylesheet" href="/vendor/bulma/css/bulma.css">
-    <link rel="stylesheet" type="text/css" href="/assets/css/main.css">
-</head>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>TradeGuildLeger.com</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700" rel="stylesheet">
+        <link rel="stylesheet" href="/vendor/bulma/css/bulma.css">
+        <link rel="stylesheet" type="text/css" href="/assets/css/main.css">
+        {{ if call .DarkMode .URLPath }}
+            <link rel="stylesheet" type="text/css" href="/assets/css/dark.css">
+        {{ else }}
+            <link rel="stylesheet" type="text/css" href="/assets/css/light.css">
+        {{ end }}
+    </head>
 
-<body>
-
-    <!-- START NAV -->
-    <nav class="navbar is-white">
+    <body>
+    <nav class="navbar {{ if call .DarkMode .URLPath }}{{ else }}}}is-white{{ end }}">
         <div class="container">
             <div class="navbar-brand">
-                <a class="navbar-item brand-text" href="/">
+                <a class="navbar-item brand-text" href="{{ call .FormatLink "/" .URLPath }}">
                     TradeGuildLedger.com
                 </a>
                 <div class="navbar-burger burger" data-target="navMenu">
@@ -30,20 +33,20 @@
             </div>
             <div id="navMenu" class="navbar-menu">
                 <div class="navbar-start">
-                    <a class="navbar-item" href="/">
+                    <a class="navbar-item" href="{{ call .FormatLink "/" .URLPath }}">
                         Home
                     </a>
-                    <a class="navbar-item" href="/downloads">
+                    <a class="navbar-item" href="{{ call .FormatLink "/downloads" .URLPath }}">
                         Downloads
                     </a>
                     <a class="navbar-item" href="https://github.com/uberswe/TradeGuildLedger">
                         Github
                     </a>
-                    <a class="navbar-item" href="/ledger/listings">
+                    <a class="navbar-item" href="{{ call .FormatLink "/ledger/listings" .URLPath }}">
                         Listings
                     </a>
                     <div class="navbar-item">
-                        <form method="GET" action="/ledger/listings">
+                        <form method="GET" action="{{ call .FormatLink "/ledger/listings" .URLPath }}">
                             <div class="columns">
                                 <div class="column is-9 ">
                                     <div class="control">
@@ -62,6 +65,8 @@
                             </div>
                         </form>
                     </div>
+                    {{ if call .DarkMode .URLPath }}<a class="navbar-item" href="{{ call .DarkModeLink .URLPath }}"><i class="fa fa-sun-o fa-2x"></i></a>{{ else }}<a
+                            class="navbar-item" href="{{ call .DarkModeLink .URLPath }}"><i class="fa fa-moon-o fa-2x"></i></a>{{ end }}
                 </div>
             </div>
         </div>
@@ -70,13 +75,16 @@
     <div class="container">
         {{template "content" .}}
         <section>
-            <p>Found an issue? Have a suggestion? Please <a href="https://github.com/uberswe/TradeGuildLedger/issues/new">open an issue on Github</a>.</p>
+            <p>Found an bug? Have a suggestion? Please <a
+                        href="https://github.com/uberswe/TradeGuildLedger/issues/new">open an issue on Github</a>.</p>
             <p>Created by @uberswe (PC/EU)</p>
-            <p>TradeGuildLedger is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.</p>
+            <p>TradeGuildLedger is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates.
+                The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in
+                the United States and/or other countries. All rights reserved.</p>
         </section>
     </div>
     <script async type="text/javascript" src="/assets/js/main.js"></script>
-</body>
+    </body>
 
-</html>
+    </html>
 {{end}}

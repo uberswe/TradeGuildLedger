@@ -17,18 +17,16 @@ import (
 )
 
 type ListingData struct {
-	Listings   []ListingView
-	Offset     int
-	NextOffset int
-	PrevOffset int
-	Search     string
+	BaseData
+	PaginationData
+	Listings []ListingView
+	Search   string
 }
 
 type TraderData struct {
+	BaseData
+	PaginationData
 	Listings   []ListingView
-	Offset     int
-	NextOffset int
-	PrevOffset int
 	Search     string
 	TraderName string
 	RegionName string
@@ -36,16 +34,16 @@ type TraderData struct {
 }
 
 type ItemData struct {
-	Listings   []ListingView
-	Offset     int
-	NextOffset int
-	PrevOffset int
-	Search     string
-	ItemName   string
-	Slug       string
+	BaseData
+	PaginationData
+	Listings []ListingView
+	Search   string
+	ItemName string
+	Slug     string
 }
 
 type ListingView struct {
+	BaseData
 	ItemName                   string
 	ItemColor                  string
 	ItemSlug                   string
@@ -148,13 +146,20 @@ func listings(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		})
 	}
 
-	err = tmpl.ExecuteTemplate(w, "layout", ListingData{
-		Listings:   listingViews,
-		Offset:     offsetCount,
-		NextOffset: offsetCount + 1,
-		PrevOffset: offsetCount - 1,
-		Search:     search,
-	})
+	listingData := ListingData{
+		Listings: listingViews,
+		Search:   search,
+	}
+	listingData.Offset = offsetCount
+	listingData.NextOffset = offsetCount + 1
+	listingData.PrevOffset = offsetCount - 1
+	listingData.URLPath = r.URL.Path
+	listingData.DarkMode = findDarkmode
+	listingData.FormatLink = linkFormatter
+	listingData.Region = findRegion
+	listingData.DarkModeLink = darkModeLinkFormatter
+
+	err = tmpl.ExecuteTemplate(w, "layout", listingData)
 	if err != nil {
 		log.Println(err)
 		return

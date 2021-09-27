@@ -1,10 +1,10 @@
 {{define "content"}}
     <section>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/traders/{{ .PrevOffset }}" class="button">Previous</a>
+            <a href="{{ call .FormatLink "/ledger/traders/" .URLPath }}{{ .PrevOffset }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Npcs) 0 }}
-            <a href="/ledger/traders/{{ .NextOffset }}" class="button">Next</a>
+            <a href="{{ call .FormatLink "/ledger/traders/" .URLPath }}{{ .NextOffset }}" class="button">Next</a>
         {{ end }}
         <table class="table">
             <thead>
@@ -28,10 +28,10 @@
             </tbody>
         </table>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/traders/{{ .PrevOffset }}" class="button">Previous</a>
+            <a href="{{ call .FormatLink "/ledger/traders/" .URLPath }}/{{ .PrevOffset }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Npcs) 0 }}
-            <a href="/ledger/traders/{{ .NextOffset }}" class="button">Next</a>
+            <a href="{{ call .FormatLink "/ledger/traders/" .URLPath }}/{{ .NextOffset }}" class="button">Next</a>
         {{ end }}
     </section>
 {{ end }}

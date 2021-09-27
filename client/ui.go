@@ -16,11 +16,10 @@ import (
 )
 
 func launchUI() {
+	// TODO move this to an about menu or something
 	logData = append(logData, "TradeGuildLedger is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered \ntrademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.")
-	logData = append(logData, "")
-	logData = append(logData, "")
 	logData = append(logData, fmt.Sprintf("Watching file: %s", sv))
-	logData = append(logData, "Force update using /reloadui in game")
+	logData = append(logData, fmt.Sprintf("Trade Guild Ledger Client %s\nhttps://www.tradeguildledger.com/\nForce update using /reloadui in game", version))
 
 	a := app.NewWithID("com.tradeguildledger.app")
 	w := a.NewWindow("Trade Guild Ledger Client")
@@ -29,7 +28,7 @@ func launchUI() {
 			return len(logData)
 		},
 		func() fyne.CanvasObject {
-			return widget.NewLabel("template")
+			return widget.NewLabel("template\nis\nmultiline\nnow")
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*widget.Label).Wrapping = fyne.TextWrapWord

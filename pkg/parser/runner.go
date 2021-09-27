@@ -2,16 +2,8 @@ package parser
 
 import (
 	"bufio"
-	"fmt"
-	"io"
-	"math"
 	"os"
 	"strings"
-	"sync"
-)
-
-var (
-	p ParsedData
 )
 
 type ParsedData struct {
@@ -26,9 +18,8 @@ type ParsedData struct {
 	Username string
 }
 
-// Inspired by https://medium.com/swlh/processing-16gb-file-in-seconds-go-lang-3982c235dfa2
 func LuaChunkParser(filePath string) (ParsedData, error) {
-	p = ParsedData{}
+	p := ParsedData{}
 	file, err := os.Open(filePath)
 
 	if err != nil {
@@ -37,37 +28,14 @@ func LuaChunkParser(filePath string) (ParsedData, error) {
 
 	defer file.Close() //close after checking err
 
-	filestat, err := file.Stat()
-	if err != nil {
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		processLine(scanner.Text(), &p)
+	}
+
+	if err := scanner.Err(); err != nil {
 		return p, err
 	}
-
-	fileSize := filestat.Size()
-	offset := fileSize - 1
-	lastLineSize := 0
-
-	for {
-		b := make([]byte, 1)
-		n, err := file.ReadAt(b, offset)
-		if err != nil {
-			break
-		}
-		char := string(b[0])
-		if char == "\n" {
-			break
-		}
-		offset--
-		lastLineSize += n
-	}
-
-	lastLine := make([]byte, lastLineSize)
-	_, err = file.ReadAt(lastLine, offset+1)
-
-	if err != nil {
-		return p, err
-	}
-
-	err = Process(file)
 
 	if err != nil {
 		return p, err
@@ -75,177 +43,75 @@ func LuaChunkParser(filePath string) (ParsedData, error) {
 	return p, nil
 }
 
-// Inspired by https://medium.com/swlh/processing-16gb-file-in-seconds-go-lang-3982c235dfa2
-func Process(f *os.File) error {
-	linesPool := sync.Pool{New: func() interface{} {
-		lines := make([]byte, 4000*1024)
-		return lines
-	}}
-
-	stringPool := sync.Pool{New: func() interface{} {
-		lines := ""
-		return lines
-	}}
-
-	r := bufio.NewReader(f)
-
-	var wg sync.WaitGroup
-
-	for {
-		buf := linesPool.Get().([]byte)
-
-		n, err := r.Read(buf)
-		buf = buf[:n]
-
-		if n == 0 {
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				fmt.Println(err)
-				break
-			}
-			return err
+func processLine(line string, p *ParsedData) {
+	if len(line) == 0 {
+		return
+	}
+	line = strings.TrimSpace(line)
+	if strings.Contains(line, "\"l:") {
+		// listing
+		s := GetStringInBetween(line, "\"l:", "\",")
+		// if not empty
+		if s != "" {
+			p.Listings = append(p.Listings, s)
 		}
-
-		nextUntillNewline, err := r.ReadBytes('\n')
-
-		if err != io.EOF {
-			buf = append(buf, nextUntillNewline...)
+	} else if strings.Contains(line, "\"i:") {
+		// item
+		s := GetStringInBetween(line, "\"i:", "\",")
+		// if not empty
+		if s != "" {
+			p.Items = append(p.Items, s)
 		}
-
-		wg.Add(1)
-		go func() {
-			ProcessChunk(buf, &linesPool, &stringPool)
-			wg.Done()
-		}()
+	} else if strings.Contains(line, "\"g:") {
+		// guild
+		s := GetStringInBetween(line, "\"g:", "\",")
+		// if not empty
+		if s != "" {
+			p.Guilds = append(p.Guilds, s)
+		}
+	} else if strings.Contains(line, "\"s:") {
+		// buy
+		s := GetStringInBetween(line, "\"s:", "\",")
+		// if not empty
+		if s != "" {
+			p.Buys = append(p.Buys, s)
+		}
+	} else if strings.Contains(line, "\"w:") {
+		// server
+		s := GetStringInBetween(line, "\"w:", "\"")
+		// if not empty
+		if s != "" {
+			p.Server = s
+		}
+	} else if strings.Contains(line, "\"r:") {
+		// regions
+		s := GetStringInBetween(line, "\"r:", "\",")
+		// if not empty
+		if s != "" {
+			p.Regions = append(p.Regions, s)
+		}
+	} else if strings.Contains(line, "\"t:") {
+		// traits
+		s := GetStringInBetween(line, "\"t:", "\",")
+		// if not empty
+		if s != "" {
+			p.Traits = append(p.Traits, s)
+		}
+	} else if strings.Contains(line, "[\"tglv\"]") {
+		// addon version
+		s := GetStringInBetween(line, "[\"tglv\"] = \"", "\"")
+		// if not empty
+		if s != "" {
+			p.Version = s
+		}
+	} else if strings.Contains(line, "[\"@") {
+		// username
+		s := GetStringInBetween(line, "[\"@", "\"")
+		// if not empty
+		if s != "" {
+			p.Username = s
+		}
 	}
-
-	wg.Wait()
-	return nil
-}
-
-// Inspired by https://medium.com/swlh/processing-16gb-file-in-seconds-go-lang-3982c235dfa2
-func ProcessChunk(chunk []byte, linesPool *sync.Pool, stringPool *sync.Pool) {
-	var wg2 sync.WaitGroup
-	mu := &sync.Mutex{}
-	sections := stringPool.Get().(string)
-	sections = string(chunk)
-
-	linesPool.Put(chunk)
-
-	logsSlice := strings.Split(sections, "\n")
-
-	stringPool.Put(sections)
-
-	chunkSize := 300
-	n := len(logsSlice)
-	noOfThread := n / chunkSize
-
-	if n%chunkSize != 0 {
-		noOfThread++
-	}
-
-	for i := 0; i < (noOfThread); i++ {
-
-		wg2.Add(1)
-		go func(s int, e int) {
-			defer wg2.Done() //to avaoid deadlocks
-			if s != 0 || e != len(logsSlice) {
-			}
-			for i := s; i < e; i++ {
-				text := logsSlice[i]
-				if len(text) == 0 {
-					continue
-				}
-				if strings.Contains(text, "\"l:") {
-					// listing
-					s := GetStringInBetween(text, "\"l:", "\",")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Listings = append(p.Listings, s)
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "\"i:") {
-					// item
-					s := GetStringInBetween(text, "\"i:", "\",")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Items = append(p.Items, s)
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "\"g:") {
-					// guild
-					s := GetStringInBetween(text, "\"g:", "\",")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Guilds = append(p.Guilds, s)
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "\"s:") {
-					// buy
-					s := GetStringInBetween(text, "\"s:", "\",")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Buys = append(p.Buys, s)
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "\"w:") {
-					// server
-					s := GetStringInBetween(text, "\"w:", "\"")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Server = s
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "\"r:") {
-					// regions
-					s := GetStringInBetween(text, "\"r:", "\",")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Regions = append(p.Regions, s)
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "\"t:") {
-					// traits
-					s := GetStringInBetween(text, "\"t:", "\",")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Traits = append(p.Traits, s)
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "[\"tglv\"]") {
-					// addon version
-					s := GetStringInBetween(text, "[\"tglv\"] = \"", "\"")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Version = s
-						mu.Unlock()
-					}
-				} else if strings.Contains(text, "[\"@") {
-					// username
-					s := GetStringInBetween(text, "[\"@", "\"")
-					// if not empty
-					if s != "" {
-						mu.Lock()
-						p.Username = s
-						mu.Unlock()
-					}
-				}
-			}
-		}(i*chunkSize, int(math.Min(float64((i+1)*chunkSize), float64(len(logsSlice)))))
-	}
-
-	wg2.Wait()
-	logsSlice = nil
 }
 
 // https://stackoverflow.com/a/42331558/1260548

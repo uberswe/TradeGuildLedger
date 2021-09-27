@@ -94,14 +94,21 @@ func item(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}
 	}
 
-	err = tmpl.ExecuteTemplate(w, "layout", ItemData{
-		Listings:   listingViews,
-		Offset:     offsetCount,
-		NextOffset: offsetCount + 1,
-		PrevOffset: offsetCount - 1,
-		ItemName:   name,
-		Slug:       slug,
-	})
+	itemData := ItemData{
+		Listings: listingViews,
+		ItemName: name,
+		Slug:     slug,
+	}
+	itemData.Offset = offsetCount
+	itemData.NextOffset = offsetCount + 1
+	itemData.PrevOffset = offsetCount - 1
+	itemData.URLPath = r.URL.Path
+	itemData.DarkMode = findDarkmode
+	itemData.FormatLink = linkFormatter
+	itemData.Region = findRegion
+	itemData.DarkModeLink = darkModeLinkFormatter
+
+	err = tmpl.ExecuteTemplate(w, "layout", itemData)
 	if err != nil {
 		log.Println(err)
 		return

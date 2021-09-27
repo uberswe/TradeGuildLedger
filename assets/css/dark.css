@@ -1,0 +1,61 @@
+html, body {
+    background: #323232;
+    color: #828282;
+}
+nav.navbar {
+    border-top: 4px solid #301B3F;
+    background-color: #151515;
+}
+.navbar-item, .navbar-link {
+    color: #828282;
+}
+.menu-label {
+    color: #8F99A3;
+}
+.menu-list a {
+    color: #0F1D38;
+}
+.menu-list a:hover {
+    color: #301B3F;
+}
+.menu-list a.is-active {
+    color: #301B3F;
+}
+.title {
+    color: #828282;
+}
+.card-header-title {
+    color: #8F99A3;
+}
+.hero.welcome.is-info {
+    background: #3C415C;
+    background: -webkit-linear-gradient(to right, #301B3F, #3C415C);
+    background: linear-gradient(to right, #301B3F, #3C415C);
+}
+.info-tiles .subtitle {
+    color: #8F99A3;
+}
+.hero.welcome .title, .hero.welcome .subtitle {
+    color: #828282;
+}
+.card-footer-item {
+    color: #8F99A3;
+}
+.card-footer {
+    border-top: 1px solid #0d0d0d;
+}
+.card {
+    background-color: #151515;
+}
+.box {
+     background-color: #151515;
+}
+.table {
+    background-color: #151515;
+    color: #828282;
+}
+input[type="text"], textarea {
+    color: #828282;
+    background-color : #323232;
+    border-color: #323232;
+}

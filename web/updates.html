@@ -1,10 +1,10 @@
 {{define "content"}}
     <section>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/events/{{ .PrevOffset }}" class="button">Previous</a>
+            <a href="{{ call .FormatLink "/ledger/events/" .URLPath }}/{{ .PrevOffset }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Updates) 0 }}
-            <a href="/ledger/events/{{ .NextOffset }}" class="button">Next</a>
+            <a href="{{ call .FormatLink "/ledger/events/" .URLPath }}/{{ .NextOffset }}" class="button">Next</a>
         {{ end }}
         <table class="table">
             <thead>
@@ -26,10 +26,10 @@
             </tbody>
         </table>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/events/{{ .PrevOffset }}" class="button">Previous</a>
+            <a href="{{ call .FormatLink "/ledger/events/" .URLPath }}/{{ .PrevOffset }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Updates) 0 }}
-            <a href="/ledger/events/{{ .NextOffset }}" class="button">Next</a>
+            <a href="{{ call .FormatLink "/ledger/events/" .URLPath }}/{{ .NextOffset }}" class="button">Next</a>
         {{ end }}
     </section>
 {{ end }}

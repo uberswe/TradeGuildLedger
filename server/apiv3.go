@@ -10,7 +10,9 @@ import (
 	"gorm.io/gorm"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -227,7 +229,13 @@ func receiveData(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 				// { "l", timestamp, id, quality, stackCount, sellerName, timeRemaining, purchasePrice, currencyType, uid, purchasePricePerUnit, guildId, npc, region, link, traitType, (timestamp + id + purchasePrice - (purchasePricePerUnit * 3)) }
 				parts := strings.Split(v, ":")
 				if len(parts) == 38 {
-					match, err := strconv.ParseFloat(parts[37], 64)
+					re := regexp.MustCompile("[0-9]+")
+					res := re.FindAllString(parts[37], 1)
+					if len(res) != 1 {
+						fmt.Println("No validation provided")
+						break
+					}
+					match, err := strconv.ParseFloat(res[0], 64)
 					if err != nil {
 						fmt.Println("Match", err)
 						break
@@ -289,7 +297,7 @@ func receiveData(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 						fmt.Println(err)
 						break
 					}
-					if match == (float64(timestamp) + float64(itemUID) + float64(price) - (pricePerUnit * 3)) {
+					if math.Floor(match) == math.Floor(float64(timestamp)+float64(itemUID)+float64(price)-(pricePerUnit*3)) {
 						sellerName := parts[4]
 						guildID := parts[10]
 						npcName := parts[11]
@@ -401,7 +409,7 @@ func receiveData(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 							}
 						}
 					} else {
-						log.Println("Validation failed", match, float64(timestamp)+float64(itemUID)+float64(price)-(pricePerUnit*3))
+						log.Println("Validation failed", math.Floor(match), math.Floor(float64(timestamp)+float64(itemUID)+float64(price)-(pricePerUnit*3)))
 						break
 					}
 				} else {
