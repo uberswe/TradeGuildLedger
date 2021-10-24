@@ -54,8 +54,12 @@ nav.navbar {
     background-color: #151515;
     color: #828282;
 }
+.table.is-striped tbody tr:not(.is-selected):nth-child(even) {
+    background-color : #282828;
+}
+
 input[type="text"], textarea {
-    color: #828282;
-    background-color : #323232;
+    color: #000000;
+    background-color : #9a9a9a;
     border-color: #323232;
 }

@@ -107,6 +107,7 @@ func item(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	itemData.FormatLink = linkFormatter
 	itemData.Region = findRegion
 	itemData.DarkModeLink = darkModeLinkFormatter
+	itemData.Title = itemData.ItemName
 
 	err = tmpl.ExecuteTemplate(w, "layout", itemData)
 	if err != nil {

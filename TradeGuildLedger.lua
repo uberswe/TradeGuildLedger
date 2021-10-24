@@ -38,6 +38,12 @@ function TradeGuildLedger:Initialize()
         TradeGuildLedger.savedVariables.tglv = "{{ .Version }}"
     end
 
+
+    -- Register event handler functions
+    EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_RESPONSE_RECEIVED, TradeGuildLedger.OnTradingHouseResponseReceived)
+    EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_OPEN_TRADING_HOUSE, TradeGuildLedger.OnTradingHouseOpened)
+    EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_CONFIRM_ITEM_PURCHASE, TradeGuildLedger.OnTradingHouseConfirmItemPurchase)
+
 end
 
 function TradeGuildLedger.OnPlayerActivated(eventCode)
@@ -162,6 +168,6 @@ function TradeGuildLedger.OnTradingHouseConfirmItemPurchase(eventCode, slotId)
     end
 end
 
--- Register event handler functions
-EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_RESPONSE_RECEIVED, TradeGuildLedger.OnTradingHouseResponseReceived)
-EVENT_MANAGER:RegisterForEvent(TradeGuildLedger.name, EVENT_TRADING_HOUSE_CONFIRM_ITEM_PURCHASE, TradeGuildLedger.OnTradingHouseConfirmItemPurchase)
+function TradeGuildLedger.OnTradingHouseOpened(eventCode)
+    -- TODO implement further fetching of data
+end

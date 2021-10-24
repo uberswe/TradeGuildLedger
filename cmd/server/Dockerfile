@@ -15,7 +15,7 @@ RUN ln -s /usr/lib/go-1.16 /usr/local/go
 RUN export PATH=/usr/lib/go/bin:$PATH
 
 # This needs to be built with the root project directory as context
-COPY ./ ./
+COPY . .
 
 RUN /usr/local/go/bin/go build -o /server cmd/server/main.go
 

@@ -158,6 +158,7 @@ func listings(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	listingData.FormatLink = linkFormatter
 	listingData.Region = findRegion
 	listingData.DarkModeLink = darkModeLinkFormatter
+	listingData.Title = "Listings"
 
 	err = tmpl.ExecuteTemplate(w, "layout", listingData)
 	if err != nil {

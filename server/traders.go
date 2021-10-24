@@ -60,6 +60,7 @@ func traders(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	npcData.FormatLink = linkFormatter
 	npcData.Region = findRegion
 	npcData.DarkModeLink = darkModeLinkFormatter
+	npcData.Title = "NPCs"
 
 	err = tmpl.ExecuteTemplate(w, "layout", listings)
 	if err != nil {
@@ -168,6 +169,7 @@ func trader(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	traderData.FormatLink = linkFormatter
 	traderData.Region = findRegion
 	traderData.DarkModeLink = darkModeLinkFormatter
+	traderData.Title = traderData.TraderName
 
 	err = tmpl.ExecuteTemplate(w, "layout", traderData)
 	if err != nil {

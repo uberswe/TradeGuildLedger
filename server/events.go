@@ -59,6 +59,7 @@ func events(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	updateData.FormatLink = linkFormatter
 	updateData.Region = findRegion
 	updateData.DarkModeLink = darkModeLinkFormatter
+	updateData.Title = "Events"
 
 	err = tmpl.ExecuteTemplate(w, "layout", updateData)
 	if err != nil {

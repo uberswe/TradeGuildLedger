@@ -31,6 +31,7 @@ type BaseData struct {
 	DarkMode     func(string) bool
 	Region       func(string) string
 	URLPath      string
+	Title        string
 }
 
 type PaginationData struct {
@@ -193,6 +194,7 @@ func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	indexData.FormatLink = linkFormatter
 	indexData.Region = findRegion
 	indexData.DarkModeLink = darkModeLinkFormatter
+	indexData.Title = "Home"
 
 	err = tmpl.ExecuteTemplate(w, "layout", indexData)
 	if err != nil {
@@ -216,6 +218,7 @@ func downloads(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		Region:       findRegion,
 		DarkModeLink: darkModeLinkFormatter,
 		URLPath:      r.URL.Path,
+		Title:        "Downloads",
 	})
 	if err != nil {
 		log.Println(err)
