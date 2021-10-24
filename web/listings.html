@@ -1,46 +1,152 @@
 {{define "content"}}
     <section>
-        {{ if gt .Offset 0 }}
-            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
-        {{ end }}
-        {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
-        {{ end }}
-        <table class="table">
-            <thead>
-            <tr>
-                <th>Item Name</th>
-                <th>Price</th>
-                <th>Trader</th>
-                <th>Seen</th>
-            </tr>
-            </thead>
-            <tfoot>
-            <tr>
-                <th>Item Name</th>
-                <th>Price</th>
-                <th>Trader</th>
-                <th>Seen</th>
-            </tr>
-            </tfoot>
-            <tbody>
+        <div class="columns">
+            <div class="column is-3 ">
+                {{ if gt .Offset 0 }}
+                    <a href="{{ call .FormatLink "/ledger/listings/" .URLPath }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+                {{ end }}
+                {{ if gt (len .Listings) 0 }}
+                    <a href="{{ call .FormatLink "/ledger/listings/" .URLPath }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+                {{ end }}
+                <form method="GET" action="{{ call .FormatLink "/ledger/listings" .URLPath }}">
+                    <div class="field">
+                        <label>Region:</label>
+                        <div class="control">
+                            <label class="radio">
+                                <input value="eu" type="radio" name="region" checked>
+                                EU
+                            </label>
+                            <label class="radio">
+                                <input value="us" type="radio" name="region">
+                                US
+                            </label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="search">Text filter:</label>
+                        <div class="control">
+                            <input id="search" class="input" name="search" type="text" placeholder="">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Price range:</label>
+                        <div class="control">
+                            <input class="input" name="minPrice" type="text" placeholder="min">
+                            <input class="input" name="maxPrice" type="text" placeholder="max">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Unit Price range:</label>
+                        <div class="control">
+                            <input class="input" name="minUnitPrice" type="text" placeholder="min">
+                            <input class="input" name="maxUnitPrice" type="text" placeholder="max">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Level range:</label>
+                        <div class="control">
+                            <input class="input" name="minLevel" type="text" placeholder="min">
+                            <input class="input" name="maxLevel" type="text" placeholder="max">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="quality">Quality:</label>
+                        <div class="control">
+                            <div class="select">
+                                <select id="quality" name="quality">
+                                    <option value="-1">Any</option>
+                                    <option value="0">Normal</option>
+                                    <option value="1">Fine</option>
+                                    <option value="2">Superior</option>
+                                    <option value="3">Epic</option>
+                                    <option value="4">Legendary</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="trait">Item type:</label>
+                        <div class="control">
+                            <div class="select">
+                                <select id="trait" name="trait">
+                                    <option value="-1">Any</option>
+                                    <option value="0">Apparel</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="trait">Trait:</label>
+                        <div class="control">
+                            <div class="select">
+                                <select id="trait" name="trait">
+                                    <option value="-1">Any</option>
+                                    <option value="0">Aggressive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <div class="buttons">
+                                <button class="button is-primary" type="submit">
+                                    Start Search <i class="fa fa-fw fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="column is-9 ">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Price</th>
+                        <th>Trader</th>
+                        <th>Seen</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Price</th>
+                        <th>Trader</th>
+                        <th>Seen</th>
+                    </tr>
+                    </tfoot>
+                    <tbody>
 
-            {{range $index, $listing := .Listings }}
-                <tr>
-                    <td><a href="/ledger/item/{{ $listing.ItemSlug }}" style="color:{{ $listing.ItemColor }};font-weight: bold;">{{ $listing.ItemName }}</a></td>
-                    <td><span style="color:#ff8c00">{{ $listing.Price }}</span>{{ if gt $listing.StackCount 1 }} (<span style="color:#ff8c00">{{ $listing.PricePerUnit }}</span> x {{ $listing.StackCount }}){{ end }}</td>
-                    <td><a href="/ledger/trader/{{ $listing.TraderSlug }}" style="font-weight: bold;">{{ $listing.TraderName }} ({{ $listing.RegionName }})</a> - {{ $listing.SellerName }}</td>
-                    <td>{{ $listing.SeenHumanReadable }}</td>
-                </tr>
+                    {{range $index, $listing := .Listings }}
+                        <tr>
+                            <td><a href="{{ call $.FormatLink "/ledger/item/" $.URLPath }}/{{ $listing.ItemSlug }}"
+                                   style="color:{{ $listing.ItemColor }};font-weight: bold;">{{ $listing.ItemName }}</a>
+                            </td>
+                            <td>
+                                <span style="color:#ff8c00">{{ $listing.Price }}</span>{{ if gt $listing.StackCount 1 }} (<span
+                                    style="color:#ff8c00">{{ $listing.PricePerUnit }}</span> x {{ $listing.StackCount }}){{ end
+                                }}
+                            </td>
+                            <td><a href="{{ call $.FormatLink "/ledger/trader/" $.URLPath }}/{{ $listing.TraderSlug }}" style="font-weight: bold;">{{
+                                    $listing.TraderName }} ({{ $listing.RegionName }})</a> - {{ $listing.SellerName }}
+                            </td>
+                            <td>{{ $listing.SeenHumanReadable }}</td>
+                        </tr>
 
-            {{end}}
-            </tbody>
-        </table>
-        {{ if gt .Offset 0 }}
-            <a href="/ledger/listings/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
-        {{ end }}
-        {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/listings/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
-        {{ end }}
+                    {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="columns">
+            <div class="column is-12">
+                {{ if gt .Offset 0 }}
+                    <a href="{{ call .FormatLink "/ledger/listings/" .URLPath }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+                {{ end }}
+                {{ if gt (len .Listings) 0 }}
+                    <a href="{{ call .FormatLink "/ledger/listings/" .URLPath }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+                {{ end }}
+            </div>
+        </div>
     </section>
 {{ end }}

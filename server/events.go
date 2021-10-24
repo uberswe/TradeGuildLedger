@@ -47,12 +47,21 @@ func events(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		log.Println(err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "layout", UpdateData{
-		Updates:    updates,
-		Offset:     offsetCount,
-		NextOffset: offsetCount + 1,
-		PrevOffset: offsetCount - 1,
-	})
+
+	updateData := UpdateData{
+		Updates: updates,
+	}
+	updateData.Offset = offsetCount
+	updateData.NextOffset = offsetCount + 1
+	updateData.PrevOffset = offsetCount - 1
+	updateData.URLPath = r.URL.Path
+	updateData.DarkMode = findDarkmode
+	updateData.FormatLink = linkFormatter
+	updateData.Region = findRegion
+	updateData.DarkModeLink = darkModeLinkFormatter
+	updateData.Title = "Events"
+
+	err = tmpl.ExecuteTemplate(w, "layout", updateData)
 	if err != nil {
 		log.Println(err)
 		return

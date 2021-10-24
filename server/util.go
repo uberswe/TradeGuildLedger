@@ -5,10 +5,46 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
 )
+
+func darkModeLinkFormatter(urlPath string) string {
+	if strings.HasPrefix(urlPath, "/dark") {
+		return strings.TrimPrefix(urlPath, "/dark")
+	}
+	return path.Join("/dark", urlPath)
+}
+
+func linkFormatter(link string, urlPath string) string {
+	if strings.HasPrefix(urlPath, "/dark/eu") {
+		return path.Join("/dark/eu", link)
+	} else if strings.HasPrefix(urlPath, "/dark/us") {
+		return path.Join("/dark/us", link)
+	} else if strings.HasPrefix(urlPath, "/eu") {
+		return path.Join("/eu", link)
+	} else if strings.HasPrefix(urlPath, "/us") {
+		return path.Join("/us", link)
+	} else if strings.HasPrefix(urlPath, "/dark") {
+		return path.Join("/dark", link)
+	}
+	return link
+}
+
+func findRegion(urlPath string) string {
+	if strings.Contains(urlPath, "/eu/") {
+		return "eu"
+	} else if strings.Contains(urlPath, "/us/") {
+		return "us"
+	}
+	return ""
+}
+
+func findDarkmode(urlPath string) bool {
+	return strings.HasPrefix(urlPath, "/dark")
+}
 
 func findFileWithExtension(folder string, extension string) (string, error) {
 	var files []string

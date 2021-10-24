@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  tgl_server:
+    build:
+      context: ./
+      dockerfile: ./cmd/server/Dockerfile
+    container_name: tgl_server
+    ports:
+      - "8080:80"

@@ -3,29 +3,45 @@ package server
 import (
 	"errors"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
+	"gorm.io/gorm"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/julienschmidt/httprouter"
-	"gorm.io/gorm"
 )
 
 var (
 	db            *gorm.DB
-	addonVersion  = "0.0.1"
-	serverVersion = "0.0.1"
+	addonVersion  = "0.0.2"
+	serverVersion = "0.0.2"
 	port          = ":3100"
 )
 
 type APIResponse struct {
-	Message string
+	Message   string
+	RequestID string
+}
+
+type BaseData struct {
+	DarkModeLink func(string) string
+	FormatLink   func(string, string) string
+	DarkMode     func(string) bool
+	Region       func(string) string
+	URLPath      string
+	Title        string
+}
+
+type PaginationData struct {
+	Offset     int
+	NextOffset int
+	PrevOffset int
 }
 
 type IndexData struct {
+	BaseData
 	Updates       []UpdateModel
 	ListingsCount int64
 	UpdatesCount  int64
@@ -33,20 +49,25 @@ type IndexData struct {
 }
 
 type UpdateData struct {
-	Updates    []UpdateModel
-	Offset     int
-	NextOffset int
-	PrevOffset int
+	BaseData
+	PaginationData
+	Updates []UpdateModel
 }
 
 type NpcData struct {
-	Npcs       []NpcModel
-	Offset     int
-	NextOffset int
-	PrevOffset int
+	BaseData
+	PaginationData
+	Npcs []NpcModel
+}
+
+func env() {
+	if envPort, isset := os.LookupEnv("HTTP_PORT"); isset {
+		port = envPort
+	}
 }
 
 func Run() {
+	env()
 	// DB
 	initDB()
 
@@ -70,14 +91,69 @@ func Run() {
 	router.GET("/ledger/events", events)
 	router.GET("/ledger/events/:offset", events)
 
-	// API
-	router.POST("/api/v1/receive", receive)
+	// EU region routes replicated
+	router.GET("/eu/ledger/listings", listings)
+	router.GET("/eu/ledger/listings/:offset", listings)
+	router.GET("/eu/ledger/item/:slug", item)
+	router.GET("/eu/ledger/traders", traders)
+	router.GET("/eu/ledger/traders/:offset", traders)
+	router.GET("/eu/ledger/trader/:slug", trader)
+	router.GET("/eu/ledger/events", events)
+	router.GET("/eu/ledger/events/:offset", events)
 
-	router.POST("/api/v2/items", receiveItems)
-	router.POST("/api/v2/listings", receiveListings)
-	router.GET("/api/v2/items", fetchItems)
-	router.GET("/api/v2/listings", fetchListings)
+	// US region routes replicated
+	router.GET("/us/ledger/listings", listings)
+	router.GET("/us/ledger/listings/:offset", listings)
+	router.GET("/us/ledger/item/:slug", item)
+	router.GET("/us/ledger/traders", traders)
+	router.GET("/us/ledger/traders/:offset", traders)
+	router.GET("/us/ledger/trader/:slug", trader)
+	router.GET("/us/ledger/events", events)
+	router.GET("/us/ledger/events/:offset", events)
+
+	// Darkmode replicated
+	router.GET("/dark/", index)
+	router.GET("/dark/downloads", downloads)
+	router.GET("/dark/downloads/:type", handleDownload)
+	router.GET("/dark/ledger/listings", listings)
+	router.GET("/dark/ledger/listings/:offset", listings)
+	router.GET("/dark/ledger/item/:slug", item)
+	router.GET("/dark/ledger/traders", traders)
+	router.GET("/dark/ledger/traders/:offset", traders)
+	router.GET("/dark/ledger/trader/:slug", trader)
+	router.GET("/dark/ledger/events", events)
+	router.GET("/dark/ledger/events/:offset", events)
+
+	// Darkmode EU region routes replicated
+	router.GET("/dark/eu/ledger/listings", listings)
+	router.GET("/dark/eu/ledger/listings/:offset", listings)
+	router.GET("/dark/eu/ledger/item/:slug", item)
+	router.GET("/dark/eu/ledger/traders", traders)
+	router.GET("/dark/eu/ledger/traders/:offset", traders)
+	router.GET("/dark/eu/ledger/trader/:slug", trader)
+	router.GET("/dark/eu/ledger/events", events)
+	router.GET("/dark/eu/ledger/events/:offset", events)
+
+	// Darkmode US region routes replicated
+	router.GET("/dark/us/ledger/listings", listings)
+	router.GET("/dark/us/ledger/listings/:offset", listings)
+	router.GET("/dark/us/ledger/item/:slug", item)
+	router.GET("/dark/us/ledger/traders", traders)
+	router.GET("/dark/us/ledger/traders/:offset", traders)
+	router.GET("/dark/us/ledger/trader/:slug", trader)
+	router.GET("/dark/us/ledger/events", events)
+	router.GET("/dark/us/ledger/events/:offset", events)
+
+	// API
+	router.POST("/api/v1/receive", removed)
+
+	router.POST("/api/v2/items", removed)
+	router.POST("/api/v2/listings", removed)
+	router.GET("/api/v2/items", removed)
+	router.GET("/api/v2/listings", removed)
 	router.GET("/api/v2/addon/version", fetchAddonVersion)
+
+	router.POST("/api/v3/receive", receiveData)
 
 	log.Println(fmt.Sprintf("TradeGuildLedgerServer %s", serverVersion))
 	log.Println(fmt.Sprintf("Listening on %s", port))
@@ -107,12 +183,20 @@ func index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Println(err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "layout", IndexData{
+	indexData := IndexData{
 		Updates:       u,
 		UpdatesCount:  updatesCount,
 		ListingsCount: listingCount,
 		ItemsCount:    itemsCount,
-	})
+	}
+	indexData.URLPath = r.URL.Path
+	indexData.DarkMode = findDarkmode
+	indexData.FormatLink = linkFormatter
+	indexData.Region = findRegion
+	indexData.DarkModeLink = darkModeLinkFormatter
+	indexData.Title = "Home"
+
+	err = tmpl.ExecuteTemplate(w, "layout", indexData)
 	if err != nil {
 		log.Println(err)
 		return
@@ -128,7 +212,14 @@ func downloads(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Println(err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "layout", nil)
+	err = tmpl.ExecuteTemplate(w, "layout", BaseData{
+		FormatLink:   linkFormatter,
+		DarkMode:     findDarkmode,
+		Region:       findRegion,
+		DarkModeLink: darkModeLinkFormatter,
+		URLPath:      r.URL.Path,
+		Title:        "Downloads",
+	})
 	if err != nil {
 		log.Println(err)
 		return

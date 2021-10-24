@@ -4,154 +4,34 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/uberswe/tradeguildledger/pkg/parser"
+	"github.com/uberswe/tradeguildledger/pkg/payloads"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/uberswe/tradeguildledger/pkg/parser"
-	"github.com/uberswe/tradeguildledger/pkg/payloads"
 )
 
-func syncWithRemote(p Processor) {
-	addLog("Syncing with server...")
-
-	itemUrl := url + "/api/v2/items"
-
-	itemsJson, err := getFromAPI(itemUrl)
-
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	var items []payloads.Item
-	err = json.Unmarshal(itemsJson, &items)
-
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	payloadItems := []payloads.FullItem{}
-
-	for _, v := range p.items {
-		found := false
-		for _, item := range items {
-			// Check if the item/listing already exists on the server
-			if item.UID == v.ID {
-				// TODO we could add a check here for differences in names, localization, etc.
-				found = true
-				break
-			}
-		}
-		if found {
-			continue
-		}
-		payloadItems = append(payloadItems, payloads.FullItem{
-			ID:          v.ID,
-			ItemName:    v.Itn,
-			Quality:     v.Quality,
-			TextureName: v.Tn,
-			Timestamp:   v.Ts,
-		})
-	}
-
-	if len(payloadItems) > 0 {
-		b, err := json.Marshal(payloads.SendItemsRequest{
-			Items:        payloadItems,
+func syncWithRemote(d parser.ParsedData) {
+	receiveUrl := url + "/api/v3/receive"
+	if len(d.Listings) > 0 {
+		b, err := json.Marshal(payloads.SendDataRequest{
 			APIKey:       apiKey,
-			APIVersion:   p.apiV,
-			AddonVersion: p.version,
-			Region:       p.region,
+			AddonVersion: version,
+			Items:        d,
 		})
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		res, err := postToAPI(itemUrl, b)
+		_, err = postToAPI(receiveUrl, b)
 		if err != nil {
+			addLog("Unable to sync with server")
 			log.Println(err)
 			return
 		}
-		log.Println(res)
 	}
-
-	listingUrl := url + "/api/v2/listings"
-
-	listingsJson, err := getFromAPI(listingUrl)
-
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	var listings []payloads.Listing
-	err = json.Unmarshal(listingsJson, &listings)
-
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	payloadListings := []payloads.FullListing{}
-
-	for _, v := range p.listings {
-		found := false
-		for _, listing := range listings {
-			// Check if the item/listing already exists on the server
-			if listing.ListingUID == v.UID {
-				// TODO we could add a check here for differences in names, localization, etc.
-				found = true
-				break
-			}
-		}
-		if found {
-			continue
-		}
-
-		r := regionFromIndex(p.regions, v.Region)
-
-		payloadListings = append(payloadListings, payloads.FullListing{
-			UID:           v.UID,
-			Price:         v.Pp,
-			CurrencyType:  v.Ct,
-			ItemID:        v.Ii,
-			Link:          v.Link,
-			PricePerUnit:  v.Pppu,
-			Quality:       v.Quality,
-			StackCount:    v.Sc,
-			SellerName:    v.Sn,
-			TimeRemaining: v.Tr,
-			SeenTimestamp: v.Ts,
-			NpcName:       v.NpcName,
-			GuildName:     v.GuildName,
-			RegionIndex:   r.Index,
-			RegionName:    r.Name,
-		})
-	}
-
-	if len(payloadListings) > 0 {
-		b, err := json.Marshal(payloads.SendListingsRequest{
-			Listings:     payloadListings,
-			APIKey:       apiKey,
-			APIVersion:   p.apiV,
-			AddonVersion: p.version,
-			Region:       p.region,
-		})
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		res, err := postToAPI(listingUrl, b)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		log.Println(res)
-	}
-
-	addLog(fmt.Sprintf("Last processed at %s", time.Now().Format("2006-01-02 15:04:05")))
+	addLog(fmt.Sprintf("Processed %d listings at %s", len(d.Listings), time.Now().Format("2006-01-02 15:04:05")))
 }
 
 func postToAPI(url string, data []byte) ([]byte, error) {
@@ -217,13 +97,4 @@ func getFromAPI(url string) ([]byte, error) {
 	}
 
 	return body, nil
-}
-
-func regionFromIndex(regions []parser.Region, index int) parser.Region {
-	for _, v := range regions {
-		if v.Index == index {
-			return v
-		}
-	}
-	return parser.Region{}
 }

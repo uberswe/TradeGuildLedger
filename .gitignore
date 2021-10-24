@@ -2,9 +2,10 @@
 *.db
 *.exe
 *.zip
-TradeGuildLedger/
-node_modules
-!savedvars/.gitkeep
-savedvars/*
+/TradeGuildLedger/
+/node_modules
+!/savedvars/.gitkeep
+/savedvars/*
 .DS_Store
-main
+/main
+/vendor

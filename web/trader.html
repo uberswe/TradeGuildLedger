@@ -3,10 +3,10 @@
         <h2>{{ .TraderName }} ({{ .RegionName }})</h2>
         <p><b>Coming soon:</b> trader stats, listing counts, price averages, etc.</p>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/trader/{{ .Slug }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+            <a href="{{ call .FormatLink "/ledger/trader/" .URLPath }}/{{ .Slug }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/trader/{{ .Slug }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+            <a href="{{ call .FormatLink "/ledger/trader/" .URLPath }}/{{ .Slug }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
         {{ end }}
         <table class="table">
             <thead>
@@ -29,7 +29,7 @@
 
             {{range $index, $listing := .Listings }}
                 <tr>
-                    <td><a href="/ledger/item/{{ $listing.ItemSlug }}" style="color:{{ $listing.ItemColor }};font-weight: bold;">{{ $listing.ItemName }}</a></td>
+                    <td><a href="{{ call $.FormatLink "/ledger/item/" $.URLPath }}/{{ $listing.ItemSlug }}" style="color:{{ $listing.ItemColor }};font-weight: bold;">{{ $listing.ItemName }}</a></td>
                     <td><span style="color:#ff8c00">{{ $listing.Price }}</span>{{ if gt $listing.StackCount 1 }} (<span style="color:#ff8c00">{{ $listing.PricePerUnit }}</span> x {{ $listing.StackCount }}){{ end }}</td>
                     <td>{{ $listing.SellerName }}</td>
                     <td>{{ $listing.SeenHumanReadable }}</td>
@@ -39,10 +39,10 @@
             </tbody>
         </table>
         {{ if gt .Offset 0 }}
-            <a href="/ledger/trader/{{ .Slug }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
+            <a href="{{ call .FormatLink "/ledger/trader/" .URLPath }}/{{ .Slug }}/{{ .PrevOffset }}?search={{ .Search }}" class="button">Previous</a>
         {{ end }}
         {{ if gt (len .Listings) 0 }}
-            <a href="/ledger/trader/{{ .Slug }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
+            <a href="{{ call .FormatLink "/ledger/trader/" .URLPath }}/{{ .Slug }}/{{ .NextOffset }}?search={{ .Search }}" class="button">Next</a>
         {{ end }}
     </section>
 {{ end }}

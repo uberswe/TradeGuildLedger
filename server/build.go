@@ -43,6 +43,7 @@ func buildWindowsClient() {
 		cmd.Env = append(cmd.Env, fmt.Sprintf("HOME=%s", os.Getenv("HOME")))
 		cmd.Env = append(cmd.Env, fmt.Sprintf("PATH=%s", os.Getenv("PATH")))
 		cmd.Env = append(cmd.Env, "GOOS=windows")
+		cmd.Env = append(cmd.Env, "GO386=softfloat")
 		cmd.Env = append(cmd.Env, "GOARCH=386")
 		cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
 		cmd.Env = append(cmd.Env, "CXX=i686-w64-mingw32-g++")
@@ -65,20 +66,40 @@ func buildWindowsClient() {
 	log.Println("Completed building windows client")
 }
 
+type ItemInfo struct {
+	ID                    string
+	Name                  string
+	TwentyFourHourAverage string
+	SevenDayAverage       string
+	ThirtyDayAverage      string
+	LowBuy                string
+	HighBuy               string
+}
+
 func buildAddonZip() {
 	// Build latest addon version
-	// TODO inject version
 	log.Println("Building zip addon files")
 	buf := new(bytes.Buffer)
 
 	w := zip.NewWriter(buf)
 
-	var files = []string{
-		"./TradeGuildLedger.iml",
-		"./TradeGuildLedger.lua",
-		"./TradeGuildLedger.txt",
+	var files = map[string]interface{}{
+		"./TradeGuildLedger.iml": AddonData{Version: serverVersion},
+		"./TradeGuildLedger.lua": AddonData{Version: serverVersion},
+		"./TradeGuildLedger.txt": AddonData{Version: serverVersion},
+		"./TradeGuildLedgerItems.lua": []ItemInfo{
+			{
+				ID:                    "-",
+				Name:                  "-",
+				TwentyFourHourAverage: "-",
+				SevenDayAverage:       "-",
+				ThirtyDayAverage:      "-",
+				LowBuy:                "-",
+				HighBuy:               "-",
+			},
+		},
 	}
-	for _, file := range files {
+	for file, data := range files {
 		f, err := w.Create(strings.TrimPrefix(file, "./"))
 		if err != nil {
 			log.Println(err)
@@ -95,7 +116,7 @@ func buildAddonZip() {
 			return
 		}
 		buf := &bytes.Buffer{}
-		err = tmpl.Execute(buf, AddonData{Version: serverVersion})
+		err = tmpl.Execute(buf, data)
 		if err != nil {
 			log.Println(err)
 			return

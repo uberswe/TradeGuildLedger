@@ -16,11 +16,10 @@ import (
 )
 
 func launchUI() {
-	logData = append(logData, "Application started, waiting to send data")
+	// TODO move this to an about menu or something
+	logData = append(logData, "TradeGuildLedger is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered \ntrademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.")
 	logData = append(logData, fmt.Sprintf("Watching file: %s", sv))
-	logData = append(logData, fmt.Sprintf("API endpoint: %s", url))
-	logData = append(logData, "Waiting for file changes")
-	logData = append(logData, "Force update using /reloadui in game")
+	logData = append(logData, fmt.Sprintf("Trade Guild Ledger Client %s\nhttps://www.tradeguildledger.com/\nForce update using /reloadui in game", version))
 
 	a := app.NewWithID("com.tradeguildledger.app")
 	w := a.NewWindow("Trade Guild Ledger Client")
@@ -29,12 +28,13 @@ func launchUI() {
 			return len(logData)
 		},
 		func() fyne.CanvasObject {
-			return widget.NewLabel("template")
+			return widget.NewLabel("template\nis\nmultiline\nnow")
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
+			o.(*widget.Label).Wrapping = fyne.TextWrapWord
 			o.(*widget.Label).SetText(logData[i])
 		})
-	checkbox := widget.NewCheck("Run Trade Guild Ledger Client at startup", runAtStartup)
+	checkbox := widget.NewCheck("Run Trade Guild Ledger Client at startup (buggy)", runAtStartup)
 	w.SetContent(container.New(layout.NewBorderLayout(nil, checkbox, nil, nil), list, checkbox))
 	w.Resize(fyne.NewSize(640, 460))
 
@@ -78,8 +78,10 @@ func runAtStartup(b bool) {
 }
 
 func addLog(s string) {
-	log.Println(logData)
+	log.Println(s)
 	logData = append(logData, s)
-	list.Refresh()
-	list.Select(len(logData) - 1)
+	if list != nil {
+		list.Refresh()
+		list.Select(len(logData) - 1)
+	}
 }

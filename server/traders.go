@@ -49,12 +49,20 @@ func traders(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		log.Println(err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "layout", NpcData{
-		Npcs:       npcs,
-		Offset:     offsetCount,
-		NextOffset: offsetCount + 1,
-		PrevOffset: offsetCount - 1,
-	})
+	npcData := NpcData{
+		Npcs: npcs,
+	}
+	npcData.Offset = offsetCount
+	npcData.NextOffset = offsetCount + 1
+	npcData.PrevOffset = offsetCount - 1
+	npcData.URLPath = r.URL.Path
+	npcData.DarkMode = findDarkmode
+	npcData.FormatLink = linkFormatter
+	npcData.Region = findRegion
+	npcData.DarkModeLink = darkModeLinkFormatter
+	npcData.Title = "NPCs"
+
+	err = tmpl.ExecuteTemplate(w, "layout", listings)
 	if err != nil {
 		log.Println(err)
 		return
@@ -146,16 +154,24 @@ func trader(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		}
 	}
 
-	err = tmpl.ExecuteTemplate(w, "layout", TraderData{
+	traderData := TraderData{
 		Listings:   listingViews,
-		Offset:     offsetCount,
-		NextOffset: offsetCount + 1,
-		PrevOffset: offsetCount - 1,
 		Search:     search,
 		RegionName: region,
 		TraderName: name,
 		Slug:       slug,
-	})
+	}
+	traderData.Offset = offsetCount
+	traderData.NextOffset = offsetCount + 1
+	traderData.PrevOffset = offsetCount - 1
+	traderData.URLPath = r.URL.Path
+	traderData.DarkMode = findDarkmode
+	traderData.FormatLink = linkFormatter
+	traderData.Region = findRegion
+	traderData.DarkModeLink = darkModeLinkFormatter
+	traderData.Title = traderData.TraderName
+
+	err = tmpl.ExecuteTemplate(w, "layout", traderData)
 	if err != nil {
 		log.Println(err)
 		return
