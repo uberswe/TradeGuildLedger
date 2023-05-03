@@ -1,5 +1,7 @@
 # TradeGuildLedger
 
+*Archived since I have lost interest in ESO and moved on to other projects*
+
 Use at your own risk, this project is in alpha.
 
 The website can be found at [TradeGuildLedger.com](https://www.TradeGuildLedger.com)
